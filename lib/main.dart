@@ -8,13 +8,29 @@ import 'providers/language_provider.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_localizations.dart';
 import 'services/ads_helper.dart';
+import 'database/database_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Khởi tạo Google Mobile Ads
   await AdsHelper.initialize();
-  
+
+  // Khởi tạo Local Database
+  try {
+    print('🚀 [DATABASE] Starting initialization...');
+    final dbHelper = DatabaseHelper.instance;
+    final db = await dbHelper.database; // Trigger database initialization
+    print('✅ [DATABASE] Database instance created: ${db.path}');
+
+    await dbHelper.printDatabaseInfo();
+    print('✅ [DATABASE] Database initialized successfully!');
+  } catch (e, stackTrace) {
+    print('❌ [DATABASE ERROR] Failed to initialize database:');
+    print('Error: $e');
+    print('StackTrace: $stackTrace');
+  }
+
   runApp(const MyApp());
 }
 

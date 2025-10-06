@@ -32,46 +32,61 @@ class DatabaseHelper {
 
   /// Khởi tạo database
   Future<Database> _initDatabase() async {
-    // Lấy đường dẫn database
-    String path = join(
-      await getDatabasesPath(),
-      LocalDatabaseSchema.databaseName,
-    );
+    try {
+      // Lấy đường dẫn database
+      final dbPath = await getDatabasesPath();
+      final path = join(dbPath, LocalDatabaseSchema.databaseName);
 
-    print('📂 Database path: $path');
+      print('[DATABASE] 📂 Database path: $path');
 
-    // Mở database
-    return await openDatabase(
-      path,
-      version: LocalDatabaseSchema.databaseVersion,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-      onOpen: _onOpen,
-    );
+      // Mở database
+      final db = await openDatabase(
+        path,
+        version: LocalDatabaseSchema.databaseVersion,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+        onOpen: _onOpen,
+      );
+
+      print('[DATABASE] ✅ Database opened successfully');
+      return db;
+    } catch (e) {
+      print('[DATABASE] ❌ Error initializing database: $e');
+      rethrow;
+    }
   }
 
   /// Callback khi tạo database lần đầu
   Future<void> _onCreate(Database db, int version) async {
-    print('🔨 Creating database version $version...');
+    print('[DATABASE] 🔨 Creating database version $version...');
 
-    // Tạo tất cả các bảng
-    for (String createTableSql in LocalDatabaseSchema.allTables) {
-      await db.execute(createTableSql);
-      print('✅ Table created');
+    try {
+      // Tạo tất cả các bảng
+      int tableCount = 0;
+      for (String createTableSql in LocalDatabaseSchema.allTables) {
+        await db.execute(createTableSql);
+        tableCount++;
+        print('[DATABASE] ✅ Table $tableCount/${LocalDatabaseSchema.allTables.length} created');
+      }
+
+      // Tạo indexes
+      int indexCount = 0;
+      for (String createIndexSql in LocalDatabaseSchema.createIndexes) {
+        await db.execute(createIndexSql);
+        indexCount++;
+      }
+      print('[DATABASE] ✅ Created $indexCount indexes');
+
+      print('[DATABASE] ✅ Database created successfully!');
+    } catch (e) {
+      print('[DATABASE] ❌ Error creating database: $e');
+      rethrow;
     }
-
-    // Tạo indexes
-    for (String createIndexSql in LocalDatabaseSchema.createIndexes) {
-      await db.execute(createIndexSql);
-      print('✅ Index created');
-    }
-
-    print('✅ Database created successfully!');
   }
 
   /// Callback khi upgrade database version
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    print('⬆️ Upgrading database from version $oldVersion to $newVersion...');
+    print('[DATABASE] ⬆️ Upgrading database from version $oldVersion to $newVersion...');
 
     // TODO: Implement migration logic khi có version mới
     // Ví dụ:
@@ -79,12 +94,12 @@ class DatabaseHelper {
     //   await db.execute('ALTER TABLE users ADD COLUMN new_field TEXT');
     // }
 
-    print('✅ Database upgraded successfully!');
+    print('[DATABASE] ✅ Database upgraded successfully!');
   }
 
   /// Callback khi mở database
   Future<void> _onOpen(Database db) async {
-    print('📖 Database opened');
+    print('[DATABASE] 📖 Database opened: ${db.path}');
   }
 
   /// Đóng database
@@ -296,12 +311,20 @@ class DatabaseHelper {
 
   /// Print database info (for debugging)
   Future<void> printDatabaseInfo() async {
-    var info = await getDatabaseInfo();
-    print('📊 Database Info:');
-    print('   Path: ${info['path']}');
-    print('   Version: ${info['version']}');
-    print('   Is Open: ${info['isOpen']}');
-    print('   Tables: ${info['tables']}');
+    try {
+      var info = await getDatabaseInfo();
+      print('[DATABASE] 📊 ========== DATABASE INFO ==========');
+      print('[DATABASE] 📂 Path: ${info['path']}');
+      print('[DATABASE] 🔢 Version: ${info['version']}');
+      print('[DATABASE] 🔓 Is Open: ${info['isOpen']}');
+      print('[DATABASE] 📋 Tables (${(info['tables'] as List).length}):');
+      for (var table in info['tables']) {
+        print('[DATABASE]    - $table');
+      }
+      print('[DATABASE] 📊 ================================');
+    } catch (e) {
+      print('[DATABASE] ❌ Error getting database info: $e');
+    }
   }
 }
 

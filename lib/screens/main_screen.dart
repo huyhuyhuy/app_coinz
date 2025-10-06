@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../providers/auth_provider.dart';
 import '../utils/app_localizations.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../widgets/mining_reward_widget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../test_database.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -380,6 +381,20 @@ class ProfileTab extends StatelessWidget {
             },
           ),
           const SizedBox(height: 20),
+          ListTile(
+            leading: const Icon(Icons.storage, color: Colors.blue),
+            title: const Text('Test Database'),
+            subtitle: const Text('Test SQLite database'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const TestDatabaseScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.settings),
             title: Text(localizations.settings),
