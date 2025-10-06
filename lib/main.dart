@@ -16,35 +16,26 @@ import 'database/database_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Khởi tạo Google Mobile Ads
-  await AdsHelper.initialize();
+  // Khởi tạo Google Mobile Ads (nhanh)
+  AdsHelper.initialize();
 
+  // Khởi tạo Supabase trước khi chạy app
+  await _initializeServices();
+
+  runApp(const MyApp());
+}
+
+Future<void> _initializeServices() async {
   // Khởi tạo Supabase
   try {
     await SupabaseService.initialize();
-    await SupabaseService.testConnection();
-  } catch (e, stackTrace) {
-    print('❌ [SUPABASE ERROR] Failed to initialize Supabase:');
-    print('Error: $e');
-    print('StackTrace: $stackTrace');
+    print('✅ [MAIN] Supabase initialized');
+  } catch (e) {
+    print('❌ [SUPABASE ERROR] Failed to initialize: $e');
   }
 
-  // Khởi tạo Local Database
-  try {
-    print('🚀 [DATABASE] Starting initialization...');
-    final dbHelper = DatabaseHelper.instance;
-    final db = await dbHelper.database;
-    print('✅ [DATABASE] Database instance created: ${db.path}');
-
-    await dbHelper.printDatabaseInfo();
-    print('✅ [DATABASE] Database initialized successfully!');
-  } catch (e, stackTrace) {
-    print('❌ [DATABASE ERROR] Failed to initialize database:');
-    print('Error: $e');
-    print('StackTrace: $stackTrace');
-  }
-
-  runApp(const MyApp());
+  // Database sẽ tự động khởi tạo khi cần (lazy initialization)
+  // Không cần khởi tạo ở đây để tránh chậm khi mở app
 }
 
 class MyApp extends StatelessWidget {

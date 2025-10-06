@@ -50,9 +50,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       } else if (mounted) {
+        final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Registration failed. Please try again.'),
+            content: Text(localizations.registrationFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -74,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
@@ -104,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 
                 // Title
                 Text(
-                  'Create Account',
+                  localizations.createAccount,
                   style: GoogleFonts.roboto(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -127,10 +128,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập họ và tên';
+                      return localizations.pleaseEnterFullName;
                     }
                     if (value.trim().split(' ').length < 2) {
-                      return 'Vui lòng nhập đầy đủ họ và tên';
+                      return localizations.pleaseEnterFullName;
                     }
                     return null;
                   },
@@ -151,10 +152,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Vui lòng nhập số điện thoại';
+                      return localizations.pleaseEnterPhoneNumber;
                     }
                     if (value.length < 10) {
-                      return 'Số điện thoại phải có ít nhất 10 số';
+                      return localizations.phoneNumberTooShort;
                     }
                     return null;
                   },
@@ -175,10 +176,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                      return localizations.pleaseEnterEmail;
                     }
                     if (!value.contains('@')) {
-                      return 'Please enter a valid email';
+                      return localizations.pleaseEnterValidEmail;
                     }
                     return null;
                   },
@@ -209,10 +210,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return localizations.pleaseEnterPassword;
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return localizations.passwordTooShort;
                     }
                     return null;
                   },
@@ -243,17 +244,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
+                      return localizations.pleaseConfirmPassword;
                     }
                     if (value != _passwordController.text) {
-                      return 'Passwords do not match';
+                      return localizations.passwordsDoNotMatch;
                     }
                     return null;
                   },
                 ),
                 
-                const SizedBox(height: 30),
-                
+                const SizedBox(height: 24),
+
                 // Register Button
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
@@ -286,15 +287,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                   },
                 ),
-                
-                const Spacer(),
-                
+
+                const SizedBox(height: 20),
+
                 // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Already have an account? ",
+                      localizations.alreadyHaveAccount,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                       ),

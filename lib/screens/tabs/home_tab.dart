@@ -51,7 +51,9 @@ class _HomeTabState extends State<HomeTab> {
             children: [
               // Welcome message
               Text(
-                '${localizations.welcomeMessage}, ${authProvider.userName ?? 'User'}!',
+                localizations.locale.languageCode == 'vi'
+                    ? 'Xin chào, ${authProvider.userName ?? 'User'}!'
+                    : 'Hello, ${authProvider.userName ?? 'User'}!',
                 style: GoogleFonts.roboto(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

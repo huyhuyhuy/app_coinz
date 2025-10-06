@@ -37,9 +37,7 @@ class DatabaseHelper {
       final dbPath = await getDatabasesPath();
       final path = join(dbPath, LocalDatabaseSchema.databaseName);
 
-      print('[DATABASE] 📂 Database path: $path');
-
-      // Mở database
+      // Mở database (sẽ tự động tạo nếu chưa có)
       final db = await openDatabase(
         path,
         version: LocalDatabaseSchema.databaseVersion,
@@ -48,7 +46,6 @@ class DatabaseHelper {
         onOpen: _onOpen,
       );
 
-      print('[DATABASE] ✅ Database opened successfully');
       return db;
     } catch (e) {
       print('[DATABASE] ❌ Error initializing database: $e');
@@ -58,26 +55,20 @@ class DatabaseHelper {
 
   /// Callback khi tạo database lần đầu
   Future<void> _onCreate(Database db, int version) async {
-    print('[DATABASE] 🔨 Creating database version $version...');
+    print('[DATABASE] 🔨 Creating new database version $version...');
 
     try {
       // Tạo tất cả các bảng
-      int tableCount = 0;
       for (String createTableSql in LocalDatabaseSchema.allTables) {
         await db.execute(createTableSql);
-        tableCount++;
-        print('[DATABASE] ✅ Table $tableCount/${LocalDatabaseSchema.allTables.length} created');
       }
 
       // Tạo indexes
-      int indexCount = 0;
       for (String createIndexSql in LocalDatabaseSchema.createIndexes) {
         await db.execute(createIndexSql);
-        indexCount++;
       }
-      print('[DATABASE] ✅ Created $indexCount indexes');
 
-      print('[DATABASE] ✅ Database created successfully!');
+      print('[DATABASE] ✅ Database created successfully with ${LocalDatabaseSchema.allTables.length} tables');
     } catch (e) {
       print('[DATABASE] ❌ Error creating database: $e');
       rethrow;
@@ -99,7 +90,7 @@ class DatabaseHelper {
 
   /// Callback khi mở database
   Future<void> _onOpen(Database db) async {
-    print('[DATABASE] 📖 Database opened: ${db.path}');
+    // Database đã mở - không cần log để tránh spam
   }
 
   /// Đóng database

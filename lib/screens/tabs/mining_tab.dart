@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/mining_provider.dart';
 import '../../providers/wallet_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../widgets/mining_reward_widget.dart';
 
 class MiningTab extends StatefulWidget {
@@ -39,11 +40,13 @@ class _MiningTabState extends State<MiningTab> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Consumer3<AuthProvider, MiningProvider, WalletProvider>(
       builder: (context, authProvider, miningProvider, walletProvider, child) {
         if (authProvider.userId == null) {
-          return const Center(
-            child: Text('Please login to start mining'),
+          return Center(
+            child: Text(localizations.pleaseLoginToStartMining),
           );
         }
 
@@ -80,7 +83,7 @@ class _MiningTabState extends State<MiningTab> {
                       
                       // Status Text
                       Text(
-                        miningProvider.isMining ? 'Mining Active' : 'Mining Stopped',
+                        miningProvider.isMining ? localizations.miningActive : localizations.miningStopped,
                         style: GoogleFonts.roboto(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -90,25 +93,25 @@ class _MiningTabState extends State<MiningTab> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Mining Stats
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _buildStatColumn(
-                            'Coins Mined',
+                            localizations.coinsMined,
                             miningProvider.formattedCoins,
                             Icons.monetization_on,
                             Colors.orange,
                           ),
                           _buildStatColumn(
-                            'Duration',
+                            localizations.duration,
                             miningProvider.formattedDuration,
                             Icons.access_time,
                             Colors.blue,
                           ),
                           _buildStatColumn(
-                            'Speed',
+                            localizations.speed,
                             '${miningProvider.formattedSpeed}/s',
                             Icons.speed,
                             Colors.green,
@@ -135,7 +138,7 @@ class _MiningTabState extends State<MiningTab> {
                             size: 28,
                           ),
                           label: Text(
-                            miningProvider.isMining ? 'Stop Mining' : 'Start Mining',
+                            miningProvider.isMining ? localizations.stopMining : localizations.startMining,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -176,7 +179,7 @@ class _MiningTabState extends State<MiningTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Wallet Balance',
+                              localizations.walletBalance,
                               style: GoogleFonts.roboto(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -223,7 +226,7 @@ class _MiningTabState extends State<MiningTab> {
                           const Icon(Icons.lightbulb, color: Colors.amber),
                           const SizedBox(width: 8),
                           Text(
-                            'Mining Tips',
+                            localizations.miningTips,
                             style: GoogleFonts.roboto(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -232,10 +235,9 @@ class _MiningTabState extends State<MiningTab> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _buildTip('⛏️ Keep the app open to continue mining'),
-                      _buildTip('📹 Watch videos to increase mining speed'),
-                      _buildTip('👥 Invite friends to earn bonus coins'),
-                      _buildTip('💰 Withdraw coins after reaching minimum amount'),
+                      _buildTip('⛏️ ${localizations.miningTip1}'),
+                      _buildTip('📹 ${localizations.miningTip3}'),
+                      _buildTip('👥 ${localizations.miningTip2}'),
                     ],
                   ),
                 ),

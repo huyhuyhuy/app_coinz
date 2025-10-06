@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/repositories.dart';
 import '../models/models.dart';
+import '../database/database_helper.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepo = UserRepository();
@@ -28,6 +29,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _checkAuthStatus() async {
+    print('[AUTH_PROVIDER] 🔍 Checking auth status...');
     _isLoading = true;
     notifyListeners();
 
@@ -36,18 +38,37 @@ class AuthProvider extends ChangeNotifier {
       final token = prefs.getString('auth_token');
       final email = prefs.getString('user_email');
       final name = prefs.getString('user_name');
+      final userId = prefs.getString('user_id');
+      final phone = prefs.getString('user_phone');
 
-      if (token != null && email != null) {
+      print('[AUTH_PROVIDER] 📋 Stored data: token=$token, email=$email, userId=$userId');
+
+      if (token != null && email != null && userId != null) {
+        print('[AUTH_PROVIDER] 🔄 Restoring session: $email');
         _isAuthenticated = true;
         _userEmail = email;
         _userName = name;
-        _userId = prefs.getString('user_id');
+        _userId = userId;
+        _userPhone = phone;
+
+        // Sync wallet from server
+        try {
+          await _walletRepo.syncWalletFromServer(userId);
+          print('[AUTH_PROVIDER] ✅ Session restored successfully');
+        } catch (e) {
+          print('[AUTH_PROVIDER] ⚠️ Failed to sync wallet: $e');
+        }
+      } else {
+        print('[AUTH_PROVIDER] ℹ️ No session found');
+        _isAuthenticated = false;
       }
     } catch (e) {
+      print('[AUTH_PROVIDER] ❌ Failed to restore session: $e');
       _isAuthenticated = false;
     } finally {
       _isLoading = false;
       notifyListeners();
+      print('[AUTH_PROVIDER] ✅ Auth check completed. isAuthenticated=$_isAuthenticated');
     }
   }
 
@@ -161,20 +182,48 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Clear local storage
+      print('[AUTH_PROVIDER] 🚪 Logging out...');
+
+      // Clear SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('auth_token');
       await prefs.remove('user_email');
       await prefs.remove('user_name');
       await prefs.remove('user_id');
+      await prefs.remove('user_phone');
+      print('[AUTH_PROVIDER] ✅ SharedPreferences cleared');
+
+      // Clear local database
+      try {
+        final db = await DatabaseHelper.instance.database;
+
+        // Xóa tất cả data trong các bảng
+        await db.delete('users');
+        await db.delete('wallets');
+        await db.delete('mining_sessions');
+        await db.delete('mining_stats');
+        await db.delete('transactions');
+        await db.delete('notifications');
+        await db.delete('friends');
+        await db.delete('news_cache');
+        await db.delete('settings');
+
+        print('[AUTH_PROVIDER] ✅ Local database cleared');
+      } catch (e) {
+        print('[AUTH_PROVIDER] ⚠️ Failed to clear database: $e');
+      }
 
       // Reset state
       _isAuthenticated = false;
       _userId = null;
       _userEmail = null;
       _userName = null;
+      _userPhone = null;
+      _currentUser = null;
+
+      print('[AUTH_PROVIDER] ✅ Logout successful');
     } catch (e) {
-      // Handle error
+      print('[AUTH_PROVIDER] ❌ Logout error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

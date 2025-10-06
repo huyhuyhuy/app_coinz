@@ -292,17 +292,20 @@ class _MiningRewardWidgetState extends State<MiningRewardWidget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Tốc độ đào hiện tại:',
-                      style: GoogleFonts.roboto(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                    Flexible(
+                      child: Text(
+                        'Tốc độ đào hiện tại:',
+                        style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       '${_currentMiningSpeed.toStringAsFixed(1)}%',
                       style: GoogleFonts.roboto(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
                       ),
@@ -313,19 +316,22 @@ class _MiningRewardWidgetState extends State<MiningRewardWidget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Thời gian còn lại:',
-                      style: GoogleFonts.roboto(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                    Flexible(
+                      child: Text(
+                        'Thời gian còn lại:',
+                        style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       _getRemainingTime(),
                       style: GoogleFonts.roboto(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: _rewardExpiryTime != null && 
+                        color: _rewardExpiryTime != null &&
                                DateTime.now().isBefore(_rewardExpiryTime!)
                             ? Colors.green
                             : Colors.red,

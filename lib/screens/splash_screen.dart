@@ -24,7 +24,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
@@ -41,20 +41,30 @@ class _SplashScreenState extends State<SplashScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOut,
     ));
 
     _animationController.forward();
 
-    // Navigate after animation
-    Future.delayed(const Duration(seconds: 3), () {
-      _checkAuthAndNavigate();
-    });
+    // Đợi animation xong rồi mới check auth
+    _initializeAndNavigate();
   }
 
-  void _checkAuthAndNavigate() {
+  Future<void> _initializeAndNavigate() async {
+    // Đợi animation chạy xong
+    await Future.delayed(const Duration(milliseconds: 1500));
+
+    // Đợi AuthProvider check auth status xong
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
+    // Nếu đang loading, đợi thêm
+    while (authProvider.isLoading) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    // Navigate
+    if (!mounted) return;
+
     if (authProvider.isAuthenticated) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),

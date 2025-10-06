@@ -8,9 +8,9 @@ import '../utils/app_localizations.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../widgets/mining_reward_widget.dart';
-import '../test_database.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/mining_tab.dart';
+import 'tabs/wallet_tab.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -109,31 +109,6 @@ class _MainScreenState extends State<MainScreen> {
 }
 
 // Placeholder tabs - will be implemented in next phase
-class WalletTab extends StatelessWidget {
-  const WalletTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Text(
-                'Wallet Tab - Coming Soon',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ),
-          // Banner quảng cáo ở cuối
-          BannerAdWidget(),
-        ],
-      ),
-    );
-  }
-}
-
 class FriendsTab extends StatelessWidget {
   const FriendsTab({super.key});
 
@@ -231,20 +206,6 @@ class ProfileTab extends StatelessWidget {
             },
           ),
           const SizedBox(height: 20),
-          ListTile(
-            leading: const Icon(Icons.storage, color: Colors.blue),
-            title: const Text('Test Database'),
-            subtitle: const Text('Test SQLite database'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const TestDatabaseScreen(),
-                ),
-              );
-            },
-          ),
-          const Divider(),
           ListTile(
             leading: const Icon(Icons.settings),
             title: Text(localizations.settings),
