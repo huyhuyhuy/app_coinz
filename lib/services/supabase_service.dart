@@ -1,0 +1,58 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/supabase_config.dart';
+
+/// Supabase Service - Singleton để quản lý Supabase client
+class SupabaseService {
+  static SupabaseClient? _client;
+  
+  /// Initialize Supabase
+  static Future<void> initialize() async {
+    try {
+      print('[SUPABASE] 🚀 Initializing Supabase...');
+      
+      await Supabase.initialize(
+        url: SupabaseConfig.supabaseUrl,
+        anonKey: SupabaseConfig.supabaseAnonKey,
+      );
+      
+      _client = Supabase.instance.client;
+      print('[SUPABASE] ✅ Supabase initialized successfully');
+      print('[SUPABASE] 🌐 URL: ${SupabaseConfig.supabaseUrl}');
+    } catch (e) {
+      print('[SUPABASE] ❌ Error initializing Supabase: $e');
+      rethrow;
+    }
+  }
+  
+  /// Get Supabase client instance
+  static SupabaseClient get client {
+    if (_client == null) {
+      throw Exception('Supabase not initialized. Call SupabaseService.initialize() first.');
+    }
+    return _client!;
+  }
+  
+  /// Check if Supabase is initialized
+  static bool get isInitialized => _client != null;
+  
+  /// Test connection to Supabase
+  static Future<bool> testConnection() async {
+    try {
+      print('[SUPABASE] 🔍 Testing connection...');
+      
+      // Try to query system_settings table
+      final response = await client
+          .from('system_settings')
+          .select('setting_key')
+          .limit(1);
+      
+      print('[SUPABASE] ✅ Connection test successful');
+      print('[SUPABASE] 📊 Response: $response');
+      return true;
+    } catch (e) {
+      print('[SUPABASE] ❌ Connection test failed: $e');
+      return false;
+    }
+  }
+}
+

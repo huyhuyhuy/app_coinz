@@ -66,6 +66,9 @@ dependencies:
   # Utilities
   intl: ^0.20.2
 
+  # Supabase
+  supabase_flutter: ^2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

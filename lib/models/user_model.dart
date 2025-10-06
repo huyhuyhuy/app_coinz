@@ -106,6 +106,7 @@ class UserModel {
     return {
       'id': userId,
       'email': email,
+      'password_hash': passwordHash,
       'full_name': fullName,
       'phone_number': phoneNumber,
       'avatar_url': avatarUrl,

@@ -5,9 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/mining_provider.dart';
+import 'providers/wallet_provider.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_localizations.dart';
 import 'services/ads_helper.dart';
+import 'services/supabase_service.dart';
 import 'database/database_helper.dart';
 
 void main() async {
@@ -16,11 +19,21 @@ void main() async {
   // Khởi tạo Google Mobile Ads
   await AdsHelper.initialize();
 
+  // Khởi tạo Supabase
+  try {
+    await SupabaseService.initialize();
+    await SupabaseService.testConnection();
+  } catch (e, stackTrace) {
+    print('❌ [SUPABASE ERROR] Failed to initialize Supabase:');
+    print('Error: $e');
+    print('StackTrace: $stackTrace');
+  }
+
   // Khởi tạo Local Database
   try {
     print('🚀 [DATABASE] Starting initialization...');
     final dbHelper = DatabaseHelper.instance;
-    final db = await dbHelper.database; // Trigger database initialization
+    final db = await dbHelper.database;
     print('✅ [DATABASE] Database instance created: ${db.path}');
 
     await dbHelper.printDatabaseInfo();
@@ -43,6 +56,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => MiningProvider()),
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
       ],
       child: Consumer<LanguageProvider>(
         builder: (context, languageProvider, child) {
