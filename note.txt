@@ -1,0 +1,48 @@
+Viết app bằng Flutter - app sẽ chạy được cả trên android và IOS
+
+1. Giao diện & hoạt động cơ bản
+•	App chạy có một khung hình chính trên điện thoại.
+•	Hiển thị thông tin: số coin đào được, số bạn bè, số lượt chia sẻ…
+•	Hỗ trợ 2 ngôn ngữ: Anh, Việt.
+•	Có nút chia sẻ app qua các mạng xã hội.
+•	Có khung quảng cáo (Google AdMob), đặt ở giữa hoặc 2/3 phía dưới màn hình, hiển thị khi mở app.
+2. Chức năng liên quan coin
+•	Tốc độ đào coin hiển thị theo thời gian thực (chỉ chạy khi user online).
+•	Tốc độ đào tăng theo mốc số bạn bè giới thiệu (20, 50, 100…).
+•	Lịch sử online: ghi rõ khoảng thời gian online và số coin đã nhận.
+•	Có mục tin tức/cập nhật thông tin liên quan đến đồng coin.
+•	Có thể xem quảng cáo để tăng hệ số đào coin hoặc kiếm thêm coin.
+•	Ví coin trong app: hiển thị số dư, mã giới thiệu, link copy.
+3. Tính năng cộng đồng
+•	Hiển thị danh sách bạn bè giới thiệu.
+•	Hiển thị số lượng bạn bè online/tổng số.
+•	Có chat với bạn bè.
+4. Chức năng tài khoản & bảo mật
+•	Tài khoản có: tên đăng nhập, tên thật, đổi mật khẩu.
+•	Xác minh danh tính (KYC): yêu cầu tải ảnh CMND/CCCD, selfie, tài khoản ngân hàng.
+•	Khi KYC thành công (admin duyệt) → cấp tick xanh.
+•	Admin lưu trữ & duyệt hồ sơ (so khớp thông tin).
+5. Chức năng giao dịch
+•	Người dùng có thể chuyển coin ra ví ngoài (sàn coin) → yêu cầu nhập địa chỉ ví, admin xác nhận.
+•	Khi rút coin, hệ thống tự trừ xu khỏi tài khoản user.
+•	Có thể chuyển coin nội bộ trong app (mua bán, cho tặng).
+o	App thu phí 11% (thuế + phí sàn).
+6. Quản trị & vận hành
+•	Admin có thể quản lý hồ sơ, duyệt KYC, quản lý giao dịch.
+•	Tính toán thuê server phù hợp để app chạy mượt, tránh sập khi nhiều user online
+z
+
+Giai đoạn 1: MVP với giao diện cơ bản, đăng ký/đăng nhập
+Giai đoạn 2: xây dựng cơ sở dữ liệu.
+Giai đoạn 3: phát hành
+
+
+để chạy app trên điện thoại Android 11:
+Kết nối điện thoại qua USB
+Bật Developer Options và USB Debugging trên điện thoại
+Kiểm tra kết nối: adb devices
+Chạy app: flutter run
+
+App ID hiện tại là test ID - bạn cần thay thế bằng ID thật từ AdMob
+Ad Unit ID cũng là test ID - thay thế bằng ID thật khi publish
+Test ads chỉ hiển thị trên thiết bị test - không hiển thị trên thiết bị thật

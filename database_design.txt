@@ -1,0 +1,454 @@
+# PHASE 2 - CƠ SỞ DỮ LIỆU APP COINZ
+# ======================================
+
+## 🎯 MỤC TIÊU
+Xây dựng hệ thống cơ sở dữ liệu để phục vụ:
+- Đăng ký/Đăng nhập người dùng
+- Quản lý thông tin tài khoản
+- Theo dõi hoạt động mining
+- Hệ thống giới thiệu bạn bè
+- Lịch sử giao dịch
+
+## 🏗️ KIẾN TRÚC DATABASE
+
+### 1. LOCAL DATABASE (SQLite)
+```
+📱 SQLite Database: app_coinz_local.db
+├── users (Bảng người dùng)
+├── mining_sessions (Phiên đào coin)
+├── mining_stats (Thống kê đào coin)
+├── friends (Danh sách bạn bè)
+├── transactions (Giao dịch nội bộ)
+└── settings (Cài đặt ứng dụng)
+```
+
+### 2. SERVER DATABASE (PostgreSQL/MySQL)
+```
+🌐 Server Database: app_coinz_server
+├── users (Thông tin người dùng)
+├── user_profiles (Hồ sơ chi tiết)
+├── mining_sessions (Phiên đào coin)
+├── mining_stats (Thống kê tổng hợp)
+├── referrals (Hệ thống giới thiệu)
+├── transactions (Giao dịch)
+└── wallets (Ví coin)
+```
+
+## 📊 CHI TIẾT CẤU TRÚC BẢNG
+
+### 🔐 BẢNG USERS (Người dùng)
+```sql
+-- LOCAL SQLite
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT UNIQUE NOT NULL,           -- UUID từ server
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,            -- Mã hóa bcrypt
+    full_name TEXT NOT NULL,
+    phone_number TEXT,
+    avatar_url TEXT,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login DATETIME,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- SERVER PostgreSQL/MySQL
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(20),
+    avatar_url TEXT,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    referral_code VARCHAR(20) UNIQUE,       -- Mã giới thiệu
+    referred_by UUID REFERENCES users(id), -- Người giới thiệu
+    total_referrals INTEGER DEFAULT 0       -- Tổng số người được giới thiệu
+);
+```
+
+### 👤 BẢNG USER_PROFILES (Hồ sơ chi tiết)
+```sql
+-- SERVER ONLY
+CREATE TABLE user_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    date_of_birth DATE,
+    gender VARCHAR(10),
+    country VARCHAR(100),
+    city VARCHAR(100),
+    address TEXT,
+    kyc_status VARCHAR(20) DEFAULT 'pending', -- pending, verified, rejected
+    kyc_documents JSONB,                      -- Lưu thông tin KYC
+    mining_level INTEGER DEFAULT 1,           -- Cấp độ đào coin
+    total_coins_mined DECIMAL(18,8) DEFAULT 0,
+    total_mining_time INTEGER DEFAULT 0,     -- Tổng thời gian đào (giây)
+    mining_speed_multiplier DECIMAL(3,2) DEFAULT 1.0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### ⛏️ BẢNG MINING_SESSIONS (Phiên đào coin)
+```sql
+-- LOCAL SQLite
+CREATE TABLE mining_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT UNIQUE NOT NULL,         -- UUID từ server
+    user_id TEXT NOT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME,
+    duration_seconds INTEGER DEFAULT 0,     -- Thời gian đào (giây)
+    coins_mined DECIMAL(18,8) DEFAULT 0,
+    mining_speed DECIMAL(10,4) DEFAULT 0,   -- Coins/giây
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    synced_to_server BOOLEAN DEFAULT FALSE
+);
+
+-- SERVER PostgreSQL/MySQL
+CREATE TABLE mining_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP,
+    duration_seconds INTEGER DEFAULT 0,
+    coins_mined DECIMAL(18,8) DEFAULT 0,
+    mining_speed DECIMAL(10,4) DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 📈 BẢNG MINING_STATS (Thống kê đào coin)
+```sql
+-- LOCAL SQLite
+CREATE TABLE mining_stats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    date DATE NOT NULL,
+    total_coins_mined DECIMAL(18,8) DEFAULT 0,
+    total_mining_time INTEGER DEFAULT 0,    -- Tổng thời gian đào (giây)
+    sessions_count INTEGER DEFAULT 0,       -- Số phiên đào
+    avg_mining_speed DECIMAL(10,4) DEFAULT 0,
+    max_mining_speed DECIMAL(10,4) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    synced_to_server BOOLEAN DEFAULT FALSE,
+    UNIQUE(user_id, date)
+);
+
+-- SERVER PostgreSQL/MySQL
+CREATE TABLE mining_stats (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    total_coins_mined DECIMAL(18,8) DEFAULT 0,
+    total_mining_time INTEGER DEFAULT 0,
+    sessions_count INTEGER DEFAULT 0,
+    avg_mining_speed DECIMAL(10,4) DEFAULT 0,
+    max_mining_speed DECIMAL(10,4) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, date)
+);
+```
+
+### 👥 BẢNG FRIENDS (Danh sách bạn bè)
+```sql
+-- LOCAL SQLite
+CREATE TABLE friends (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    friend_id TEXT NOT NULL,
+    friend_email TEXT NOT NULL,
+    friend_name TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',    -- pending, accepted, blocked
+    referral_bonus DECIMAL(18,8) DEFAULT 0, -- Bonus từ giới thiệu
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    synced_to_server BOOLEAN DEFAULT FALSE,
+    UNIQUE(user_id, friend_id)
+);
+
+-- SERVER PostgreSQL/MySQL
+CREATE TABLE friends (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    friend_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'pending',    -- pending, accepted, blocked
+    referral_bonus DECIMAL(18,8) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, friend_id),
+    CHECK (user_id != friend_id)            -- Không thể kết bạn với chính mình
+);
+```
+
+### 🔄 BẢNG REFERRALS (Hệ thống giới thiệu)
+```sql
+-- SERVER ONLY
+CREATE TABLE referrals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    referrer_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    referred_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    referral_code VARCHAR(20) NOT NULL,
+    bonus_coins DECIMAL(18,8) DEFAULT 0,
+    bonus_percentage DECIMAL(5,2) DEFAULT 5.0, -- % bonus từ mining của người được giới thiệu
+    status VARCHAR(20) DEFAULT 'active',     -- active, inactive, expired
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(referred_id)                      -- Mỗi người chỉ có thể được giới thiệu 1 lần
+);
+```
+
+### 💰 BẢNG WALLETS (Ví coin)
+```sql
+-- LOCAL SQLite
+CREATE TABLE wallets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    wallet_address TEXT UNIQUE NOT NULL,
+    balance DECIMAL(18,8) DEFAULT 0,
+    pending_balance DECIMAL(18,8) DEFAULT 0, -- Số dư chờ xử lý
+    total_earned DECIMAL(18,8) DEFAULT 0,    -- Tổng kiếm được
+    total_spent DECIMAL(18,8) DEFAULT 0,    -- Tổng chi tiêu
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    synced_to_server BOOLEAN DEFAULT FALSE
+);
+
+-- SERVER PostgreSQL/MySQL
+CREATE TABLE wallets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    wallet_address VARCHAR(255) UNIQUE NOT NULL,
+    balance DECIMAL(18,8) DEFAULT 0,
+    pending_balance DECIMAL(18,8) DEFAULT 0,
+    total_earned DECIMAL(18,8) DEFAULT 0,
+    total_spent DECIMAL(18,8) DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 💸 BẢNG TRANSACTIONS (Giao dịch)
+```sql
+-- LOCAL SQLite
+CREATE TABLE transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    transaction_id TEXT UNIQUE NOT NULL,     -- UUID từ server
+    user_id TEXT NOT NULL,
+    transaction_type VARCHAR(20) NOT NULL,   -- mining, referral, transfer, withdrawal
+    amount DECIMAL(18,8) NOT NULL,
+    balance_before DECIMAL(18,8) NOT NULL,
+    balance_after DECIMAL(18,8) NOT NULL,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'pending',   -- pending, completed, failed, cancelled
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    synced_to_server BOOLEAN DEFAULT FALSE
+);
+
+-- SERVER PostgreSQL/MySQL
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    transaction_type VARCHAR(20) NOT NULL,
+    amount DECIMAL(18,8) NOT NULL,
+    balance_before DECIMAL(18,8) NOT NULL,
+    balance_after DECIMAL(18,8) NOT NULL,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'pending',
+    metadata JSONB,                          -- Thông tin bổ sung
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+
+### ⚙️ BẢNG SETTINGS (Cài đặt)
+```sql
+-- LOCAL SQLite ONLY
+CREATE TABLE settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, setting_key)
+);
+```
+
+## 🔗 QUAN HỆ GIỮA CÁC BẢNG
+
+### Mối quan hệ chính:
+```
+users (1) ──→ (1) user_profiles
+users (1) ──→ (1) wallets
+users (1) ──→ (*) mining_sessions
+users (1) ──→ (*) mining_stats
+users (1) ──→ (*) transactions
+users (1) ──→ (*) friends (as user_id)
+users (1) ──→ (*) friends (as friend_id)
+users (1) ──→ (*) referrals (as referrer_id)
+users (1) ──→ (1) referrals (as referred_id)
+```
+
+## 🚀 SERVER MIỄN PHÍ ĐỀ XUẤT
+
+### 1. Supabase (PostgreSQL)
+- **URL**: https://supabase.com
+- **Miễn phí**: 500MB database, 50MB file storage
+- **Tính năng**: Real-time, Auth, Storage, Edge Functions
+- **Ưu điểm**: Dễ setup, có dashboard quản lý
+
+### 2. PlanetScale (MySQL)
+- **URL**: https://planetscale.com
+- **Miễn phí**: 1 database, 1GB storage
+- **Tính năng**: Branching, Schema migrations
+- **Ưu điểm**: Serverless, auto-scaling
+
+### 3. Railway (PostgreSQL/MySQL)
+- **URL**: https://railway.app
+- **Miễn phí**: $5 credit/tháng
+- **Tính năng**: Auto-deploy, monitoring
+- **Ưu điểm**: Dễ deploy, có nhiều add-ons
+
+### 4. Neon (PostgreSQL)
+- **URL**: https://neon.tech
+- **Miễn phí**: 3GB storage, 10GB transfer
+- **Tính năng**: Serverless, branching
+- **Ưu điểm**: Tối ưu cho development
+
+## 📱 LOCAL DATABASE SETUP
+
+### SQLite với Flutter:
+```yaml
+dependencies:
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  path_provider: ^2.1.1
+```
+
+### Database Helper Class:
+```dart
+class DatabaseHelper {
+  static Database? _database;
+  static const String _databaseName = 'app_coinz_local.db';
+  static const int _databaseVersion = 1;
+  
+  // Singleton pattern
+  static Future<Database> get database async {
+    _database ??= await _initDatabase();
+    return _database!;
+  }
+  
+  static Future<Database> _initDatabase() async {
+    String path = join(await getDatabasesPath(), _databaseName);
+    return await openDatabase(
+      path,
+      version: _databaseVersion,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
+  }
+}
+```
+
+## 🔄 SYNC STRATEGY
+
+### 1. Offline-First Approach:
+- Local database làm primary
+- Sync với server khi có internet
+- Conflict resolution cho data conflicts
+
+### 2. Sync Methods:
+- **Real-time**: WebSocket cho mining sessions
+- **Batch**: HTTP API cho historical data
+- **Background**: Sync khi app idle
+
+### 3. Data Priority:
+- Server data có priority cao hơn local
+- User preferences sync từ local lên server
+- Mining data sync từ local lên server
+
+## 📊 INDEXES & PERFORMANCE
+
+### Indexes cần thiết:
+```sql
+-- Users table
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_referral_code ON users(referral_code);
+
+-- Mining sessions
+CREATE INDEX idx_mining_sessions_user_id ON mining_sessions(user_id);
+CREATE INDEX idx_mining_sessions_start_time ON mining_sessions(start_time);
+
+-- Transactions
+CREATE INDEX idx_transactions_user_id ON transactions(user_id);
+CREATE INDEX idx_transactions_created_at ON transactions(created_at);
+
+-- Friends
+CREATE INDEX idx_friends_user_id ON friends(user_id);
+CREATE INDEX idx_friends_friend_id ON friends(friend_id);
+```
+
+## 🔒 SECURITY CONSIDERATIONS
+
+### 1. Data Encryption:
+- Password: bcrypt với salt
+- Sensitive data: AES encryption
+- API keys: Secure storage
+
+### 2. Access Control:
+- JWT tokens cho authentication
+- Role-based permissions
+- Rate limiting cho API
+
+### 3. Data Privacy:
+- GDPR compliance
+- Data anonymization
+- User consent management
+
+---
+
+## 📋 IMPLEMENTATION ROADMAP
+
+### Week 1-2: Local Database
+- [ ] Setup SQLite với Flutter
+- [ ] Tạo database schema
+- [ ] Implement CRUD operations
+- [ ] Unit tests cho database
+
+### Week 3-4: Server Database
+- [ ] Chọn và setup server miễn phí
+- [ ] Tạo database schema trên server
+- [ ] Implement API endpoints
+- [ ] Authentication system
+
+### Week 5-6: Sync System
+- [ ] Implement sync logic
+- [ ] Conflict resolution
+- [ ] Background sync
+- [ ] Error handling
+
+### Week 7-8: Testing & Optimization
+- [ ] Integration tests
+- [ ] Performance optimization
+- [ ] Security audit
+- [ ] Documentation
+
+---
+
+**Tổng kết**: Cấu trúc CSDL này sẽ hỗ trợ đầy đủ các tính năng của Phase 2, với khả năng mở rộng cho Phase 3. Local database đảm bảo app hoạt động offline, server database đảm bảo data consistency và real-time features. 
+
+**Thay đổi trong phiên bản này:**
+- ✅ Đã xóa bảng `notifications` - sử dụng local storage cho thông báo
+- ✅ Đã xóa bảng `app_settings` - chỉ sử dụng local settings
+- ✅ Đã đơn giản hóa bảng `mining_sessions` - bỏ các trường phức tạp như device_info và ip_address

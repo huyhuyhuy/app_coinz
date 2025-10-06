@@ -12,18 +12,6 @@ A cross-platform Flutter application for coin mining and community features, sup
 - ✅ **Responsive Design** - Works on different screen sizes
 - ✅ **Modern UI** - Material Design 3 with custom theming
 
-### Phase 2 (Planned) - Core Mining Features
-- 🔄 **Real-time Mining** - Live coin mining with WebSocket
-- 🔄 **Mining Statistics** - Track coins mined, speed, online time
-- 🔄 **Friend Referral System** - Boost mining speed with referrals
-- 🔄 **Mining History** - Detailed logs of mining sessions
-
-### Phase 3 (Planned) - Advanced Features
-- 🔄 **Wallet Integration** - Internal coin wallet
-- 🔄 **Community Features** - Friend management, chat
-- 🔄 **KYC System** - Identity verification
-- 🔄 **Transaction System** - Coin transfers and withdrawals
-
 ## 🛠️ Technical Stack
 
 - **Framework**: Flutter 3.35.1
