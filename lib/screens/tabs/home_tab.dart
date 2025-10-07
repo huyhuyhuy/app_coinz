@@ -8,7 +8,9 @@ import '../../utils/app_localizations.dart';
 import '../../widgets/banner_ad_widget.dart';
 
 class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+  final VoidCallback onNavigateToWallet;
+
+  const HomeTab({super.key, required this.onNavigateToWallet});
 
   @override
   State<HomeTab> createState() => _HomeTabState();
@@ -69,61 +71,75 @@ class _HomeTabState extends State<HomeTab> {
               ),
               const SizedBox(height: 20),
               
-              // Wallet Balance Card
-              Card(
-                elevation: 4,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20.0),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.account_balance_wallet,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Total Balance',
-                            style: GoogleFonts.roboto(
-                              fontSize: 16,
-                              color: Colors.white70,
-                            ),
-                          ),
+              // Wallet Balance Card (Clickable)
+              InkWell(
+                onTap: widget.onNavigateToWallet,
+                borderRadius: BorderRadius.circular(12),
+                child: Card(
+                  elevation: 4,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.secondary,
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        '${walletProvider.formattedBalanceShort} COINZ',
-                        style: GoogleFonts.roboto(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.account_balance_wallet,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  localizations.totalBalance,
+                                  style: GoogleFonts.roboto(
+                                    fontSize: 16,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white70,
+                              size: 16,
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        walletProvider.shortWalletAddress,
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: Colors.white70,
+                        const SizedBox(height: 12),
+                        Text(
+                          '${walletProvider.formattedBalanceShort} COINZ',
+                          style: GoogleFonts.roboto(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          walletProvider.shortWalletAddress,
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -213,6 +229,47 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 16),
+
+                      // Start/Stop Mining Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            if (miningProvider.isMining) {
+                              await miningProvider.stopMining(authProvider.userId!);
+                              await walletProvider.refresh(authProvider.userId!);
+                            } else {
+                              await miningProvider.startMining(authProvider.userId!);
+                            }
+                          },
+                          icon: Icon(
+                            miningProvider.isMining ? Icons.stop : Icons.play_arrow,
+                            size: 24,
+                          ),
+                          label: Text(
+                            miningProvider.isMining
+                                ? localizations.stopMining
+                                : localizations.startMining,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: miningProvider.isMining
+                                ? Colors.red
+                                : Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

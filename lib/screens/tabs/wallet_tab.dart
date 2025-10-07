@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/mining_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../utils/app_localizations.dart';
 import '../../widgets/banner_ad_widget.dart';
@@ -30,18 +30,35 @@ class _WalletTabState extends State<WalletTab> {
   Future<void> _initializeProviders() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    
+
     if (authProvider.userId != null) {
-      await walletProvider.initialize(authProvider.userId!);
+      // Use addPostFrameCallback to avoid calling setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        walletProvider.initialize(authProvider.userId!);
+      });
     }
+  }
+
+  void _copyWalletAddress(BuildContext context, String address) {
+    Clipboard.setData(ClipboardData(text: address));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context).locale.languageCode == 'vi'
+              ? 'Đã sao chép địa chỉ ví'
+              : 'Wallet address copied',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    
-    return Consumer3<AuthProvider, MiningProvider, WalletProvider>(
-      builder: (context, authProvider, miningProvider, walletProvider, child) {
+
+    return Consumer2<AuthProvider, WalletProvider>(
+      builder: (context, authProvider, walletProvider, child) {
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -67,27 +84,12 @@ class _WalletTabState extends State<WalletTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            localizations.locale.languageCode == 'vi'
-                                ? 'Tổng số dư'
-                                : 'Total Balance',
-                            style: GoogleFonts.roboto(
-                              fontSize: 16,
-                              color: Colors.white70,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.refresh, color: Colors.white),
-                            onPressed: () async {
-                              if (authProvider.userId != null) {
-                                await walletProvider.refresh(authProvider.userId!);
-                              }
-                            },
-                          ),
-                        ],
+                      Text(
+                        localizations.totalBalance,
+                        style: GoogleFonts.roboto(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -99,20 +101,38 @@ class _WalletTabState extends State<WalletTab> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        walletProvider.shortWalletAddress,
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              walletProvider.shortWalletAddress,
+                              style: GoogleFonts.roboto(
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy, color: Colors.white70, size: 18),
+                            onPressed: () {
+                              _copyWalletAddress(
+                                context,
+                                walletProvider.wallet?.walletAddress ?? '',
+                              );
+                            },
+                            tooltip: localizations.locale.languageCode == 'vi'
+                                ? 'Sao chép địa chỉ'
+                                : 'Copy address',
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Withdraw Button (disabled)
               SizedBox(
                 width: double.infinity,
@@ -120,9 +140,7 @@ class _WalletTabState extends State<WalletTab> {
                   onPressed: null, // Disabled for now
                   icon: const Icon(Icons.account_balance_wallet),
                   label: Text(
-                    localizations.locale.languageCode == 'vi'
-                        ? 'Rút tiền (Sắp ra mắt)'
-                        : 'Withdraw (Coming Soon)',
+                    '${localizations.withdraw} (${localizations.comingSoon})',
                     style: GoogleFonts.roboto(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -138,118 +156,105 @@ class _WalletTabState extends State<WalletTab> {
               ),
               
               const SizedBox(height: 24),
-              
-              // Mining History Section
+
+              // Transaction History Section
               Text(
                 localizations.locale.languageCode == 'vi'
-                    ? 'Lịch sử đào'
-                    : 'Mining History',
+                    ? 'Lịch sử giao dịch'
+                    : 'Transaction History',
                 style: GoogleFonts.roboto(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
-              FutureBuilder<Map<String, dynamic>>(
-                future: miningProvider.getMiningStats(authProvider.userId ?? ''),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  
-                  final stats = snapshot.data!;
-                  final totalCoins = stats['totalCoins'] as double? ?? 0.0;
-                  final totalTime = stats['totalTime'] as int? ?? 0;
-                  final totalSessions = stats['totalSessions'] as int? ?? 0;
-                  
-                  return Card(
-                    child: Padding(
+
+              // Incoming Transactions (Mining rewards)
+              Card(
+                child: ExpansionTile(
+                  leading: Icon(Icons.arrow_downward, color: Colors.green[600]),
+                  title: Text(
+                    localizations.locale.languageCode == 'vi'
+                        ? 'Giao dịch đến'
+                        : 'Incoming Transactions',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.w600),
+                  ),
+                  children: [
+                    Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          _buildStatRow(
+                          _buildTransactionItem(
                             context,
                             localizations.locale.languageCode == 'vi'
-                                ? 'Tổng coin đã đào'
-                                : 'Total Coins Mined',
-                            totalCoins.toStringAsFixed(8),
+                                ? 'Phần thưởng đào coin'
+                                : 'Mining Rewards',
+                            '+ ${walletProvider.wallet?.totalEarned.toStringAsFixed(8) ?? '0.00000000'} COINZ',
                             Icons.monetization_on,
-                            Colors.orange,
-                          ),
-                          const Divider(),
-                          _buildStatRow(
-                            context,
-                            localizations.locale.languageCode == 'vi'
-                                ? 'Tổng thời gian đào'
-                                : 'Total Mining Time',
-                            _formatDuration(totalTime),
-                            Icons.access_time,
-                            Colors.blue,
-                          ),
-                          const Divider(),
-                          _buildStatRow(
-                            context,
-                            localizations.locale.languageCode == 'vi'
-                                ? 'Tổng số phiên'
-                                : 'Total Sessions',
-                            totalSessions.toString(),
-                            Icons.history,
                             Colors.green,
+                          ),
+                          const Divider(),
+                          Center(
+                            child: Text(
+                              localizations.locale.languageCode == 'vi'
+                                  ? 'Xem tất cả giao dịch đến'
+                                  : 'View all incoming transactions',
+                              style: GoogleFonts.roboto(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  );
-                },
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Withdrawal History Section
-              Text(
-                localizations.locale.languageCode == 'vi'
-                    ? 'Lịch sử rút tiền'
-                    : 'Withdrawal History',
-                style: GoogleFonts.roboto(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  ],
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
+              // Outgoing Transactions (Coming soon)
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.receipt_long,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          localizations.locale.languageCode == 'vi'
-                              ? 'Chưa có giao dịch rút tiền'
-                              : 'No withdrawal transactions yet',
-                          style: GoogleFonts.roboto(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
+                child: ExpansionTile(
+                  leading: Icon(Icons.arrow_upward, color: Colors.red[600]),
+                  title: Text(
+                    localizations.locale.languageCode == 'vi'
+                        ? 'Giao dịch đi'
+                        : 'Outgoing Transactions',
+                    style: GoogleFonts.roboto(fontWeight: FontWeight.w600),
                   ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.send,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              localizations.comingSoon,
+                              style: GoogleFonts.roboto(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Banner Ad
               const BannerAdWidget(),
             ],
@@ -259,7 +264,7 @@ class _WalletTabState extends State<WalletTab> {
     );
   }
 
-  Widget _buildStatRow(
+  Widget _buildTransactionItem(
     BuildContext context,
     String label,
     String value,
@@ -291,26 +296,14 @@ class _WalletTabState extends State<WalletTab> {
           Text(
             value,
             style: GoogleFonts.roboto(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],
       ),
     );
-  }
-
-  String _formatDuration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    } else if (minutes > 0) {
-      return '${minutes}m';
-    } else {
-      return '${seconds}s';
-    }
   }
 }
 

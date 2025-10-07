@@ -21,9 +21,15 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  
-  final List<Widget> _tabs = [
-    const HomeTab(),
+
+  void _navigateToTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  List<Widget> get _tabs => [
+    HomeTab(onNavigateToWallet: () => _navigateToTab(2)),
     const MiningTab(),
     const WalletTab(),
     const FriendsTab(),
