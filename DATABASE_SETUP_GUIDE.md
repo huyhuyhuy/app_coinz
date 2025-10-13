@@ -116,8 +116,19 @@ import 'package:app_coinz/database/database_helper.dart';
 2. Click **"API"**
 3. Copy các thông tin:
    - **Project URL**: https://otncsmyfaaomszzmfkxt.supabase.co
+   
    - **anon public key**: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90bmNzbXlmYWFvbXN6em1ma3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3MzkzNTksImV4cCI6MjA3NTMxNTM1OX0.fLQtLqHiJJLLFENKk5w1TazKD4Q22Aca4TP23CcVMK0
+
    - **service_role key**: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90bmNzbXlmYWFvbXN6em1ma3h0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTczOTM1OSwiZXhwIjoyMDc1MzE1MzU5fQ.7Qlz63y77PksG_fqxqPcyAodmdBJ-w9NdIBsPSIN_ls
+
+
+<!-- khách -->
+
+https://fawavpodkrkgmasvuabf.supabase.co
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhd2F2cG9ka3JrZ21hc3Z1YWJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5MTIyMDUsImV4cCI6MjA3NTQ4ODIwNX0.8xReUTDdSWLvIZd5BoFcPX4uQfR_d-rZyYI7TrGRn1o
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZhd2F2cG9ka3JrZ21hc3Z1YWJmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTkxMjIwNSwiZXhwIjoyMDc1NDg4MjA1fQ.sKbY3tArmycX8NGvCAZrTlQ1Ki3AF5fBnpm4GjAb8BE
 
 ### Bước 6: Setup Row Level Security (RLS)
 
