@@ -12,21 +12,27 @@ class VideoAdRepository {
     try {
       print('[VIDEO_AD_REPO] 🎬 Getting random active video...');
 
+      // Query trực tiếp từ table để đảm bảo lấy đầy đủ thông tin bao gồm total_views
       final response = await _supabase
-          .rpc('get_random_active_video')
+          .from('video_ads')
           .select()
-          .single();
+          .eq('status', 'active')
+          .order('created_at', ascending: false)
+          .limit(1);
 
-      if (response == null) {
+      if (response == null || (response as List).isEmpty) {
         print('[VIDEO_AD_REPO] ℹ️ No active video found');
         return null;
       }
 
-      final video = VideoAdModel.fromJson(response as Map<String, dynamic>);
+      final videoData = (response as List).first as Map<String, dynamic>;
+      final video = VideoAdModel.fromJson(videoData);
       print('[VIDEO_AD_REPO] ✅ Got video: ${video.videoTitle}');
+      print('[VIDEO_AD_REPO] 👁️ Total views from DB: ${video.totalViews}');
       return video;
     } catch (e) {
       print('[VIDEO_AD_REPO] ❌ Error getting random video: $e');
+      print('[VIDEO_AD_REPO] 📋 Error details: $e');
       return null;
     }
   }
@@ -77,6 +83,7 @@ class VideoAdRepository {
 
       await _supabase.from('video_views').insert(viewData);
       print('[VIDEO_AD_REPO] ✅ Video view recorded');
+      print('[VIDEO_AD_REPO] ℹ️ Database trigger will auto-increment total_views');
 
       // 2. Nếu xem xong, cộng reward vào wallet
       if (completed && rewardAmount > 0) {

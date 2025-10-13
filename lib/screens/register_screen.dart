@@ -21,6 +21,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -31,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -43,6 +45,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailController.text.trim(),
         _passwordController.text,
         _confirmPasswordController.text,
+        _referralCodeController.text.trim().isEmpty 
+            ? null 
+            : _referralCodeController.text.trim(),
       );
 
       if (success && mounted) {
@@ -251,6 +256,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     return null;
                   },
+                ),
+                
+                const SizedBox(height: 20),
+
+                // Referral Code Field (Optional)
+                TextFormField(
+                  controller: _referralCodeController,
+                  decoration: InputDecoration(
+                    labelText: localizations.referralCodeOptional,
+                    hintText: localizations.enterReferralCode,
+                    prefixIcon: const Icon(Icons.card_giftcard_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.green.shade50,
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  // Không bắt buộc, nên không có validator required
+                  // Validation sẽ được thực hiện trong repository
                 ),
                 
                 const SizedBox(height: 24),

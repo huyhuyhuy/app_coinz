@@ -159,6 +159,11 @@ flutter build apk --release
 flutter build appbundle --release
 ```
 
+### build android debug test
+```bash
+flutter build apk --debug
+```
+
 ### iOS
 ```bash
 flutter build ios --release

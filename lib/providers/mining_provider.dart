@@ -65,8 +65,16 @@ class MiningProvider with ChangeNotifier {
     }
   }
   
+  /// Calculate speed multiplier based on total referrals
+  double _calculateSpeedMultiplier(int totalReferrals) {
+    if (totalReferrals >= 100) return 4.0; // x4
+    if (totalReferrals >= 50) return 3.0;  // x3
+    if (totalReferrals >= 20) return 2.0;  // x2
+    return 1.0; // x1 (default)
+  }
+
   /// Start mining
-  Future<bool> startMining(String userId) async {
+  Future<bool> startMining(String userId, {int? totalReferrals}) async {
     try {
       if (_isMining) {
         print('[MINING_PROVIDER] ⚠️ Mining already active');
@@ -74,6 +82,13 @@ class MiningProvider with ChangeNotifier {
       }
       
       print('[MINING_PROVIDER] ⛏️ Starting mining...');
+
+      // Tính speed multiplier dựa trên referrals
+      if (totalReferrals != null) {
+        _speedMultiplier = _calculateSpeedMultiplier(totalReferrals);
+        print('[MINING_PROVIDER] 📊 Total referrals: $totalReferrals');
+        print('[MINING_PROVIDER] ⚡ Speed multiplier: x${_speedMultiplier}');
+      }
       
       // Start mining session
       final session = await _miningRepo.startMining(
@@ -96,7 +111,7 @@ class MiningProvider with ChangeNotifier {
       _startMiningTimer();
       
       notifyListeners();
-      print('[MINING_PROVIDER] ✅ Mining started');
+      print('[MINING_PROVIDER] ✅ Mining started with speed: ${_miningSpeed}');
       return true;
     } catch (e) {
       print('[MINING_PROVIDER] ❌ Error starting mining: $e');

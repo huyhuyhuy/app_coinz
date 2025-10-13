@@ -119,12 +119,15 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> register(String fullName, String phoneNumber, String email, String password, String confirmPassword) async {
+  Future<bool> register(String fullName, String phoneNumber, String email, String password, String confirmPassword, [String? referralCode]) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       print('[AUTH_PROVIDER] 📝 Registering: $email');
+      if (referralCode != null && referralCode.isNotEmpty) {
+        print('[AUTH_PROVIDER] 🎁 With referral code: $referralCode');
+      }
 
       // Validate
       if (password != confirmPassword) {
@@ -138,6 +141,7 @@ class AuthProvider extends ChangeNotifier {
         password: password,
         fullName: fullName,
         phoneNumber: phoneNumber,
+        referralCode: referralCode,
       );
 
       if (user != null) {

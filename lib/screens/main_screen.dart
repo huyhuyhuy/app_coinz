@@ -7,10 +7,11 @@ import '../providers/auth_provider.dart';
 import '../utils/app_localizations.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/banner_ad_widget.dart';
-import '../widgets/mining_reward_widget.dart';
+import '../repositories/friends_repository.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/mining_tab.dart';
 import 'tabs/wallet_tab.dart';
+import 'kyc_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -54,7 +55,16 @@ class _MainScreenState extends State<MainScreen> {
           LanguageSelector(),
         ],
       ),
-      body: _tabs[_currentIndex],
+      body: Column(
+        children: [
+          // Main content area
+          Expanded(
+            child: _tabs[_currentIndex],
+          ),
+          // Banner Ad - Always visible above bottom nav
+          const BannerAdWidget(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -74,7 +84,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.monetization_on_outlined),
             activeIcon: const Icon(Icons.monetization_on),
-            label: localizations.mining,
+            label: localizations.task,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.account_balance_wallet_outlined),
@@ -101,7 +111,7 @@ class _MainScreenState extends State<MainScreen> {
       case 0:
         return localizations.home;
       case 1:
-        return localizations.mining;
+        return localizations.task;
       case 2:
         return localizations.wallet;
       case 3:
@@ -114,27 +124,273 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-// Placeholder tabs - will be implemented in next phase
-class FriendsTab extends StatelessWidget {
+// Friends Tab - Hiển thị danh sách bạn bè
+class FriendsTab extends StatefulWidget {
   const FriendsTab({super.key});
 
   @override
+  State<FriendsTab> createState() => _FriendsTabState();
+}
+
+class _FriendsTabState extends State<FriendsTab> {
+  @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
+    final localizations = AppLocalizations.of(context);
+    
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, child) {
+        if (authProvider.userId == null) {
+          return Center(
+            child: Text(localizations.pleaseLoginToStartMining),
+          );
+        }
+
+        return FutureBuilder<List<dynamic>>(
+          future: _loadFriendsData(authProvider.userId!),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Error: ${snapshot.error}'),
+              );
+            }
+
+            final data = snapshot.data;
+            if (data == null || data.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.people_outline,
+                        size: 80,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        localizations.noFriends,
+                        style: GoogleFonts.roboto(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        localizations.inviteFriendsToGetStarted,
+                        style: GoogleFonts.roboto(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final referrer = data[0] as dynamic; // Người giới thiệu (nếu có)
+            final referrals = data[1] as List<dynamic>; // Những người mình giới thiệu
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Người giới thiệu bạn (nếu có)
+                  if (referrer != null) ...[
+                    Text(
+                      localizations.referredYou,
+                      style: GoogleFonts.roboto(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildFriendCard(context, referrer, isReferrer: true),
+                    const SizedBox(height: 24),
+                  ],
+
+                  // Danh sách người bạn đã giới thiệu
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        localizations.yourReferrals,
+                        style: GoogleFonts.roboto(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${referrals.length} ${localizations.locale.languageCode == 'vi' ? 'bạn bè' : 'friends'}',
+                          style: GoogleFonts.roboto(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  if (referrals.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
+                          localizations.locale.languageCode == 'vi'
+                              ? 'Bạn chưa giới thiệu ai'
+                              : 'You haven\'t referred anyone yet',
+                          style: GoogleFonts.roboto(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    ...referrals.map((friend) => _buildFriendCard(context, friend)).toList(),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<List<dynamic>> _loadFriendsData(String userId) async {
+    final friendsRepo = FriendsRepository();
+    
+    final referrer = await friendsRepo.getUserReferrer(userId);
+    final referrals = await friendsRepo.getUserReferrals(userId);
+    
+    return [referrer, referrals];
+  }
+
+  Widget _buildFriendCard(BuildContext context, FriendInfo friend, {bool isReferrer = false}) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            // Avatar
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: isReferrer 
+                  ? Colors.purple.shade100
+                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
               child: Text(
-                'Friends Tab - Coming Soon',
-                style: TextStyle(fontSize: 18),
+                friend.user.initials,
+                style: GoogleFonts.roboto(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isReferrer 
+                      ? Colors.purple.shade700
+                      : Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
-          ),
-          // Banner quảng cáo ở cuối
-          BannerAdWidget(),
-        ],
+            const SizedBox(width: 16),
+
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          friend.user.fullName,
+                          style: GoogleFonts.roboto(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isReferrer) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '⭐ Referrer',
+                            style: GoogleFonts.roboto(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.monetization_on, size: 14, color: Colors.orange[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${friend.formattedBalance} COINZ',
+                        style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(Icons.speed, size: 14, color: Colors.blue[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${friend.formattedSpeed}/s',
+                        style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Online status
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: friend.isOnline ? Colors.green : Colors.grey[400],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -213,17 +469,38 @@ class ProfileTab extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           ListTile(
-            leading: const Icon(Icons.settings),
-            title: Text(localizations.settings),
+            leading: const Icon(Icons.verified_user),
+            title: Text(localizations.kyc),
+            subtitle: Text(
+              localizations.kycVerification,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              // TODO: Navigate to settings
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const KYCScreen(),
+                ),
+              );
             },
           ),
           ListTile(
-            leading: const Icon(Icons.share),
-            title: Text(localizations.share),
+            leading: const Icon(Icons.contact_mail),
+            title: Text(localizations.contact),
             onTap: () {
-              // TODO: Implement share functionality
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(localizations.contactUs),
+                  content: const Text('devtest@gmail.com'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
           ListTile(
@@ -237,9 +514,6 @@ class ProfileTab extends StatelessWidget {
               }
             },
           ),
-          const SizedBox(height: 20),
-          // Banner quảng cáo ở cuối
-          const BannerAdWidget(),
         ],
       ),
     );

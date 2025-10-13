@@ -210,6 +210,7 @@ class UserRepository {
     required String password,
     required String fullName,
     String? phoneNumber,
+    String? referralCode,
   }) async {
     try {
       print('[USER_REPO] 📝 Registering new user: $email');
@@ -220,6 +221,28 @@ class UserRepository {
         print('[USER_REPO] ❌ User already exists');
         return null;
       }
+
+      // Validate referral code if provided
+      UserModel? referrer;
+      if (referralCode != null && referralCode.isNotEmpty) {
+        print('[USER_REPO] 🔍 Validating referral code: $referralCode');
+        
+        // Tìm người giới thiệu bằng referral code
+        try {
+          final response = await SupabaseService.client
+              .from('users')
+              .select()
+              .eq('referral_code', referralCode)
+              .single();
+          
+          referrer = UserModel.fromJson(response);
+          print('[USER_REPO] ✅ Referral code valid. Referrer: ${referrer.fullName}');
+        } catch (e) {
+          print('[USER_REPO] ❌ Invalid referral code: $referralCode');
+          // Mã không hợp lệ - không throw error, chỉ bỏ qua
+          referrer = null;
+        }
+      }
       
       // Create user model with UUID format
       final user = UserModel(
@@ -229,6 +252,7 @@ class UserRepository {
         fullName: fullName,
         phoneNumber: phoneNumber,
         referralCode: _generateReferralCode(),
+        referredBy: referrer?.userId, // Lưu ID người giới thiệu
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -242,6 +266,26 @@ class UserRepository {
       
       // Save to local
       await saveLocalUser(serverUser);
+
+      // Nếu có người giới thiệu, tăng totalReferrals cho họ
+      if (referrer != null) {
+        print('[USER_REPO] 🎁 Incrementing referrals for: ${referrer.fullName}');
+        
+        try {
+          final updatedReferrer = referrer.copyWith(
+            totalReferrals: referrer.totalReferrals + 1,
+            updatedAt: DateTime.now(),
+          );
+          
+          await updateServerUser(updatedReferrer);
+          await updateLocalUser(updatedReferrer);
+          
+          print('[USER_REPO] ✅ Referrer totalReferrals: ${referrer.totalReferrals} → ${updatedReferrer.totalReferrals}');
+        } catch (e) {
+          print('[USER_REPO] ⚠️ Failed to update referrer: $e');
+          // Không throw error, user registration đã thành công
+        }
+      }
       
       print('[USER_REPO] ✅ User registered successfully');
       return serverUser;

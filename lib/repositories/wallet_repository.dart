@@ -249,6 +249,75 @@ class WalletRepository {
   Future<bool> subtractCoins(String userId, double amount) async {
     return await updateBalance(userId, amount, isAdd: false);
   }
+
+  /// Transfer coins between users (internal transfer)
+  Future<bool> transferInternal({
+    required String fromUserId,
+    required String toWalletAddress,
+    required double amount,
+  }) async {
+    try {
+      print('[WALLET_REPO] 💸 Starting internal transfer...');
+      print('[WALLET_REPO] From: $fromUserId');
+      print('[WALLET_REPO] To: $toWalletAddress');
+      print('[WALLET_REPO] Amount: $amount');
+
+      // Get sender's wallet
+      final senderWallet = await getLocalWallet(fromUserId);
+      if (senderWallet == null) {
+        print('[WALLET_REPO] ❌ Sender wallet not found');
+        return false;
+      }
+
+      // Check balance
+      if (senderWallet.balance < amount) {
+        print('[WALLET_REPO] ❌ Insufficient balance');
+        return false;
+      }
+
+      // Find recipient by wallet address
+      final db = await _dbHelper.database;
+      final recipientResult = await db.query(
+        'wallets',
+        where: 'wallet_address = ?',
+        whereArgs: [toWalletAddress],
+      );
+
+      if (recipientResult.isEmpty) {
+        print('[WALLET_REPO] ❌ Recipient wallet not found');
+        return false;
+      }
+
+      final recipientWallet = WalletModel.fromMap(recipientResult.first);
+
+      // Prevent self-transfer
+      if (senderWallet.userId == recipientWallet.userId) {
+        print('[WALLET_REPO] ❌ Cannot transfer to yourself');
+        return false;
+      }
+
+      // Perform transfer
+      // 1. Subtract from sender
+      await updateBalance(fromUserId, amount, isAdd: false);
+
+      // 2. Add to recipient
+      final recipientUpdated = recipientWallet.copyWith(
+        balance: recipientWallet.balance + amount,
+        totalEarned: recipientWallet.totalEarned + amount,
+        updatedAt: DateTime.now(),
+      );
+      await updateLocalWallet(recipientUpdated);
+
+      // 3. Create transaction record (optional - for history)
+      // TODO: Implement transaction history
+
+      print('[WALLET_REPO] ✅ Internal transfer completed successfully');
+      return true;
+    } catch (e) {
+      print('[WALLET_REPO] ❌ Error during internal transfer: $e');
+      return false;
+    }
+  }
   
   // ============================================================================
   // HELPER METHODS

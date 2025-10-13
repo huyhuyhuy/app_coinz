@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../utils/app_localizations.dart';
-import '../../widgets/banner_ad_widget.dart';
 
 class WalletTab extends StatefulWidget {
   const WalletTab({super.key});
@@ -49,6 +48,166 @@ class _WalletTabState extends State<WalletTab> {
               : 'Wallet address copied',
         ),
         duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showInternalTransferDialog(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+    
+    final recipientController = TextEditingController();
+    final amountController = TextEditingController();
+    final passwordController = TextEditingController();
+    bool showPasswordField = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(localizations.transferInternal),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: recipientController,
+                    decoration: InputDecoration(
+                      labelText: localizations.recipientWalletAddress,
+                      hintText: 'COINZ...',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.account_balance_wallet),
+                    ),
+                    enabled: !showPasswordField,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountController,
+                    decoration: InputDecoration(
+                      labelText: localizations.amount,
+                      hintText: '0.00',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.monetization_on),
+                      suffixText: 'COINZ',
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    enabled: !showPasswordField,
+                  ),
+                  if (showPasswordField) ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        labelText: localizations.password,
+                        hintText: localizations.pleaseEnterPassword,
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                      ),
+                      obscureText: true,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                },
+                child: Text(localizations.cancel),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (!showPasswordField) {
+                    // First step: Validate input
+                    final recipient = recipientController.text.trim();
+                    final amountText = amountController.text.trim();
+
+                    if (recipient.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(localizations.pleaseEnterWalletAddress)),
+                      );
+                      return;
+                    }
+
+                    if (amountText.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(localizations.pleaseEnterAmount)),
+                      );
+                      return;
+                    }
+
+                    final amount = double.tryParse(amountText);
+                    if (amount == null || amount <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(localizations.pleaseEnterAmount)),
+                      );
+                      return;
+                    }
+
+                    if (amount > walletProvider.balance) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(localizations.insufficientBalance)),
+                      );
+                      return;
+                    }
+
+                    // Show password field
+                    setState(() {
+                      showPasswordField = true;
+                    });
+                  } else {
+                    // Second step: Verify password and transfer
+                    final password = passwordController.text;
+                    
+                    if (password.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(localizations.pleaseEnterPassword)),
+                      );
+                      return;
+                    }
+
+                    // Verify password (simple check for now)
+                    // In production, this should verify against stored password hash
+                    // For now, we'll just check if it's not empty
+                    
+                    final amount = double.parse(amountController.text);
+                    final recipient = recipientController.text.trim();
+
+                    // Perform internal transfer
+                    final success = await walletProvider.transferInternal(
+                      fromUserId: authProvider.userId!,
+                      toWalletAddress: recipient,
+                      amount: amount,
+                    );
+
+                    Navigator.pop(dialogContext);
+
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.transferSuccessful),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      await walletProvider.refresh(authProvider.userId!);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(localizations.transferFailed),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(showPasswordField ? localizations.confirm : localizations.locale.languageCode == 'vi' ? 'Tiếp tục' : 'Continue'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -133,26 +292,56 @@ class _WalletTabState extends State<WalletTab> {
 
               const SizedBox(height: 20),
 
-              // Withdraw Button (disabled)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: null, // Disabled for now
-                  icon: const Icon(Icons.account_balance_wallet),
-                  label: Text(
-                    '${localizations.withdraw} (${localizations.comingSoon})',
-                    style: GoogleFonts.roboto(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+              // Transfer Buttons
+              Row(
+                children: [
+                  // Internal Transfer Button
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showInternalTransferDialog(context),
+                      icon: const Icon(Icons.swap_horiz, size: 20),
+                      label: Text(
+                        localizations.transferInternal,
+                        style: GoogleFonts.roboto(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(width: 12),
+                  // BNB Transfer Button (Coming Soon)
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: null,
+                      icon: const Icon(Icons.currency_bitcoin, size: 20),
+                      label: Text(
+                        '${localizations.transferToBNB}\n(${localizations.comingSoon} + KYC)',
+                        style: GoogleFonts.roboto(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
               
               const SizedBox(height: 24),
@@ -254,9 +443,6 @@ class _WalletTabState extends State<WalletTab> {
               ),
 
               const SizedBox(height: 20),
-
-              // Banner Ad
-              const BannerAdWidget(),
             ],
           ),
         );

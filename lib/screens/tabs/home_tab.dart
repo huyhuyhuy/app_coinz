@@ -5,7 +5,6 @@ import '../../providers/auth_provider.dart';
 import '../../providers/mining_provider.dart';
 import '../../providers/wallet_provider.dart';
 import '../../utils/app_localizations.dart';
-import '../../widgets/banner_ad_widget.dart';
 
 class HomeTab extends StatefulWidget {
   final VoidCallback onNavigateToWallet;
@@ -16,8 +15,52 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final miningProvider = Provider.of<MiningProvider>(context, listen: false);
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+
+    if (authProvider.userId == null) return;
+
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        // App is going to background - stop mining
+        if (miningProvider.isMining) {
+          print('[HOME_TAB] 🛑 App going to background - stopping mining');
+          miningProvider.stopMining(authProvider.userId!).then((_) {
+            walletProvider.refresh(authProvider.userId!);
+          });
+        }
+        break;
+      case AppLifecycleState.resumed:
+        // App is back to foreground - no auto restart
+        print('[HOME_TAB] ▶️ App resumed - mining will not auto-restart');
+        break;
+      case AppLifecycleState.hidden:
+        // App is hidden but still running
+        break;
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -244,7 +287,11 @@ class _HomeTabState extends State<HomeTab> {
                               await miningProvider.stopMining(authProvider.userId!);
                               await walletProvider.refresh(authProvider.userId!);
                             } else {
-                              await miningProvider.startMining(authProvider.userId!);
+                              // Truyền totalReferrals để tính speed multiplier
+                              await miningProvider.startMining(
+                                authProvider.userId!,
+                                totalReferrals: authProvider.currentUser?.totalReferrals ?? 0,
+                              );
                             }
                           },
                           icon: Icon(
@@ -331,9 +378,6 @@ class _HomeTabState extends State<HomeTab> {
                 },
               ),
               const SizedBox(height: 20),
-              
-              // Banner quảng cáo
-              const BannerAdWidget(),
             ],
           ),
         );

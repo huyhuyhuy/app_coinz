@@ -156,5 +156,39 @@ class WalletProvider with ChangeNotifier {
       return false;
     }
   }
+
+  /// Transfer coins to another user (internal transfer)
+  Future<bool> transferInternal({
+    required String fromUserId,
+    required String toWalletAddress,
+    required double amount,
+  }) async {
+    try {
+      print('[WALLET_PROVIDER] 💸 Transferring $amount coins...');
+      
+      if (balance < amount) {
+        print('[WALLET_PROVIDER] ❌ Insufficient balance');
+        return false;
+      }
+
+      final success = await _walletRepo.transferInternal(
+        fromUserId: fromUserId,
+        toWalletAddress: toWalletAddress,
+        amount: amount,
+      );
+
+      if (success) {
+        await refresh(fromUserId);
+        print('[WALLET_PROVIDER] ✅ Transfer completed successfully');
+      } else {
+        print('[WALLET_PROVIDER] ❌ Transfer failed');
+      }
+
+      return success;
+    } catch (e) {
+      print('[WALLET_PROVIDER] ❌ Error transferring coins: $e');
+      return false;
+    }
+  }
 }
 

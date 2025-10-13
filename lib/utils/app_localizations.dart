@@ -122,9 +122,18 @@ class AppLocalizations {
   String get mining {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Đào coin';
+        return 'Nhiệm vụ';
       default:
-        return 'Mining';
+        return 'Task';
+    }
+  }
+
+  String get task {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Nhiệm vụ';
+      default:
+        return 'Task';
     }
   }
 
@@ -539,18 +548,495 @@ class AppLocalizations {
   String get miningTip2 {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Mời bạn bè để nhận thưởng';
+        return 'Mời bạn bè để tăng tốc độ đào';
       default:
-        return 'Invite friends to earn rewards';
+        return 'Invite friends to boost mining speed';
     }
   }
 
   String get miningTip3 {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Xem video để tăng tốc độ đào';
+        return 'Xem video để nhận thưởng';
       default:
-        return 'Watch videos to boost mining speed';
+        return 'Watch videos to earn rewards';
+    }
+  }
+
+  String get inviteFriends {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Mời bạn bè';
+      default:
+        return 'Invite Friends';
+    }
+  }
+
+  String get referralCode {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Mã giới thiệu';
+      default:
+        return 'Referral Code';
+    }
+  }
+
+  String get copyReferralCode {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Sao chép mã giới thiệu';
+      default:
+        return 'Copy Referral Code';
+    }
+  }
+
+  String get totalReferrals {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Tổng số bạn bè đã mời';
+      default:
+        return 'Total Referrals';
+    }
+  }
+
+  String get speedBonus {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Tăng tốc độ';
+      default:
+        return 'Speed Bonus';
+    }
+  }
+
+  String get transferInternal {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Chuyển nội bộ';
+      default:
+        return 'Internal Transfer';
+    }
+  }
+
+  String get transferToBNB {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Chuyển qua BNB';
+      default:
+        return 'Transfer to BNB';
+    }
+  }
+
+  String get recipientWalletAddress {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Địa chỉ ví người nhận';
+      default:
+        return 'Recipient Wallet Address';
+    }
+  }
+
+  String get amount {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Số lượng';
+      default:
+        return 'Amount';
+    }
+  }
+
+  String get confirm {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Xác nhận';
+      default:
+        return 'Confirm';
+    }
+  }
+
+  String get cancel {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Hủy';
+      default:
+        return 'Cancel';
+    }
+  }
+
+  String get contact {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Liên hệ';
+      default:
+        return 'Contact';
+    }
+  }
+
+  String get contactUs {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Liên hệ với chúng tôi';
+      default:
+        return 'Contact Us';
+    }
+  }
+
+  String get advertisementContact {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Liên hệ quảng cáo';
+      default:
+        return 'Advertisement Contact';
+    }
+  }
+
+  String get requiresKYC {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Yêu cầu KYC';
+      default:
+        return 'Requires KYC';
+    }
+  }
+
+  String get transferSuccessful {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Chuyển coin thành công';
+      default:
+        return 'Transfer successful';
+    }
+  }
+
+  String get transferFailed {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Chuyển coin thất bại';
+      default:
+        return 'Transfer failed';
+    }
+  }
+
+  String get insufficientBalance {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Số dư không đủ';
+      default:
+        return 'Insufficient balance';
+    }
+  }
+
+  String get invalidWalletAddress {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Địa chỉ ví không hợp lệ';
+      default:
+        return 'Invalid wallet address';
+    }
+  }
+
+  String get pleaseEnterAmount {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập số lượng';
+      default:
+        return 'Please enter amount';
+    }
+  }
+
+  String get pleaseEnterWalletAddress {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập địa chỉ ví';
+      default:
+        return 'Please enter wallet address';
+    }
+  }
+
+  String get videoViews {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Lượt xem';
+      default:
+        return 'Views';
+    }
+  }
+
+  String get copied {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Đã sao chép';
+      default:
+        return 'Copied';
+    }
+  }
+
+  String get referralCodeOptional {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Mã giới thiệu (tùy chọn)';
+      default:
+        return 'Referral Code (Optional)';
+    }
+  }
+
+  String get enterReferralCode {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Nhập mã giới thiệu nếu có';
+      default:
+        return 'Enter referral code if you have one';
+    }
+  }
+
+  String get invalidReferralCode {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Mã giới thiệu không hợp lệ';
+      default:
+        return 'Invalid referral code';
+    }
+  }
+
+  String get referralCodeApplied {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Mã giới thiệu đã được áp dụng';
+      default:
+        return 'Referral code applied';
+    }
+  }
+
+  String get friendsList {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Danh sách bạn bè';
+      default:
+        return 'Friends List';
+    }
+  }
+
+  String get noFriends {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Chưa có bạn bè';
+      default:
+        return 'No friends yet';
+    }
+  }
+
+  String get inviteFriendsToGetStarted {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Mời bạn bè để bắt đầu kiếm thưởng!';
+      default:
+        return 'Invite friends to get started earning rewards!';
+    }
+  }
+
+  String get yourReferrals {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Bạn bè của bạn';
+      default:
+        return 'Your Referrals';
+    }
+  }
+
+  String get referredYou {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Người giới thiệu bạn';
+      default:
+        return 'Referred You';
+    }
+  }
+
+  String get kyc {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'KYC';
+      default:
+        return 'KYC';
+    }
+  }
+
+  String get kycVerification {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Xác minh danh tính';
+      default:
+        return 'Identity Verification';
+    }
+  }
+
+  String get idCardNumber {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Số CMND/CCCD';
+      default:
+        return 'ID Card Number';
+    }
+  }
+
+  String get idCardFrontPhoto {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Ảnh mặt trước CMND/CCCD';
+      default:
+        return 'ID Card Front Photo';
+    }
+  }
+
+  String get idCardBackPhoto {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Ảnh mặt sau CMND/CCCD';
+      default:
+        return 'ID Card Back Photo';
+    }
+  }
+
+  String get selfiePhoto {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Ảnh selfie cầm CMND/CCCD';
+      default:
+        return 'Selfie with ID Card';
+    }
+  }
+
+  String get bankName {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Tên ngân hàng';
+      default:
+        return 'Bank Name';
+    }
+  }
+
+  String get bankAccountNumber {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Số tài khoản ngân hàng';
+      default:
+        return 'Bank Account Number';
+    }
+  }
+
+  String get bankAccountName {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Tên chủ tài khoản';
+      default:
+        return 'Account Holder Name';
+    }
+  }
+
+  String get uploadPhoto {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Tải ảnh lên';
+      default:
+        return 'Upload Photo';
+    }
+  }
+
+  String get takePhoto {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Chụp ảnh';
+      default:
+        return 'Take Photo';
+    }
+  }
+
+  String get chooseFromGallery {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Chọn từ thư viện';
+      default:
+        return 'Choose from Gallery';
+    }
+  }
+
+  String get submit {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Gửi';
+      default:
+        return 'Submit';
+    }
+  }
+
+  String get kycInformation {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Thông tin KYC';
+      default:
+        return 'KYC Information';
+    }
+  }
+
+  String get personalInformation {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Thông tin cá nhân';
+      default:
+        return 'Personal Information';
+    }
+  }
+
+  String get bankInformation {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Thông tin ngân hàng';
+      default:
+        return 'Bank Information';
+    }
+  }
+
+  String get photoDocuments {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Tài liệu hình ảnh';
+      default:
+        return 'Photo Documents';
+    }
+  }
+
+  String get pleaseEnterIdCardNumber {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập số CMND/CCCD';
+      default:
+        return 'Please enter ID card number';
+    }
+  }
+
+  String get pleaseEnterBankName {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập tên ngân hàng';
+      default:
+        return 'Please enter bank name';
+    }
+  }
+
+  String get pleaseEnterBankAccountNumber {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập số tài khoản';
+      default:
+        return 'Please enter account number';
+    }
+  }
+
+  String get pleaseEnterBankAccountName {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập tên chủ tài khoản';
+      default:
+        return 'Please enter account holder name';
     }
   }
 }

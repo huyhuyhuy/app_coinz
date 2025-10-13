@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/app_localizations.dart';
-import '../../widgets/mining_reward_widget.dart';
+import '../../widgets/video_carousel_widget.dart';
+import '../../widgets/invite_friends_widget.dart';
 
 class MiningTab extends StatefulWidget {
   const MiningTab({super.key});
@@ -30,39 +31,20 @@ class _MiningTabState extends State<MiningTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title
-              Text(
-                localizations.locale.languageCode == 'vi'
-                    ? 'Kiếm thưởng'
-                    : 'Earn Rewards',
-                style: GoogleFonts.roboto(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              // Video Carousel Widget
+              const VideoCarouselWidget(),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
-              Text(
-                localizations.locale.languageCode == 'vi'
-                    ? 'Xem video để nhận phần thưởng COINZ'
-                    : 'Watch videos to earn COINZ rewards',
-                style: GoogleFonts.roboto(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Video Reward Widget
-              const MiningRewardWidget(),
+              // Invite Friends Widget
+              const InviteFriendsWidget(),
 
               const SizedBox(height: 20),
 
               // Mining Tips
               Card(
                 elevation: 2,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -89,6 +71,28 @@ class _MiningTabState extends State<MiningTab> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 20),
+
+              // Advertisement Contact Footer
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    localizations.locale.languageCode == 'vi'
+                        ? 'Liên hệ quảng cáo: test@gmail.com'
+                        : 'Advertisement contact: test@gmail.com',
+                    style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
             ],
           ),
         );
