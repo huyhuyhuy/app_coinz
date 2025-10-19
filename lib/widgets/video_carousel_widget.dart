@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
@@ -7,6 +8,12 @@ import '../models/video_ad_model.dart';
 import '../repositories/video_ad_repository.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
+
+/// Enum để xác định loại video
+enum VideoType {
+  youtube,
+  directMp4,
+}
 
 class VideoCarouselWidget extends StatefulWidget {
   const VideoCarouselWidget({super.key});
@@ -17,14 +24,18 @@ class VideoCarouselWidget extends StatefulWidget {
 
 class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
   bool _isExpanded = false;
-  bool _isVideoPlaying = false;
+  // ❌ Removed: bool _isVideoPlaying = false; (conflict with method _isVideoPlaying())
   
   List<VideoAdModel> _videos = [];
   int _currentVideoIndex = 0;
   bool _isLoadingVideos = false;
   String? _errorMessage;
 
-  Map<int, YoutubePlayerController> _controllers = {};
+  // ✅ Controllers cho cả YouTube và Direct MP4
+  Map<int, YoutubePlayerController> _youtubeControllers = {};
+  Map<int, VideoPlayerController> _mp4Controllers = {};
+  Map<int, VideoType> _videoTypes = {};  // Track video type cho mỗi video
+  
   Map<int, int> _watchSeconds = {};
   Map<int, bool> _videoClaimed = {};
   Map<int, bool> _isClaimingReward = {}; // Prevent multiple claim calls
@@ -40,14 +51,7 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     _loadVideosFromSupabase();
   }
 
-  @override
-  void dispose() {
-    _watchTimer?.cancel();
-    for (var controller in _controllers.values) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
+  // ❌ Removed old dispose() - using new dispose() at end of file
 
   Future<void> _loadVideosFromSupabase() async {
     setState(() {
@@ -90,9 +94,49 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     }
   }
 
+  /// ✅ Detect video type và initialize appropriate controller
   void _initializeVideoController(int index, String videoUrl) {
+    print('[VIDEO_CAROUSEL] 🎬 Initializing video $index: $videoUrl');
+    
+    // Detect video type
+    final videoType = _detectVideoType(videoUrl);
+    _videoTypes[index] = videoType;
+    
+    if (videoType == VideoType.youtube) {
+      _initializeYouTubeController(index, videoUrl);
+    } else {
+      _initializeMp4Controller(index, videoUrl);
+    }
+  }
+  
+  /// Detect video type from URL
+  VideoType _detectVideoType(String videoUrl) {
+    // Check if YouTube URL
+    final youtubeId = YoutubePlayer.convertUrlToId(videoUrl);
+    if (youtubeId != null) {
+      return VideoType.youtube;
+    }
+    
+    // Check if direct video file (mp4, webm, etc.)
+    final lowerUrl = videoUrl.toLowerCase();
+    if (lowerUrl.endsWith('.mp4') || 
+        lowerUrl.endsWith('.webm') || 
+        lowerUrl.endsWith('.mov') ||
+        lowerUrl.contains('/storage/v1/object/public/')) {  // Supabase storage
+      return VideoType.directMp4;
+    }
+    
+    // Default to YouTube
+    return VideoType.youtube;
+  }
+  
+  /// Initialize YouTube player controller
+  void _initializeYouTubeController(int index, String videoUrl) {
     final videoId = YoutubePlayer.convertUrlToId(videoUrl);
-    if (videoId == null) return;
+    if (videoId == null) {
+      print('[VIDEO_CAROUSEL] ❌ Invalid YouTube URL: $videoUrl');
+      return;
+    }
 
     final controller = YoutubePlayerController(
       initialVideoId: videoId,
@@ -103,13 +147,53 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     );
 
     controller.addListener(() => _onPlayerStateChange(index));
-    _controllers[index] = controller;
+    _youtubeControllers[index] = controller;
+    print('[VIDEO_CAROUSEL] ✅ YouTube controller initialized for video $index');
   }
-
+  
+  /// Initialize Direct MP4 player controller
+  void _initializeMp4Controller(int index, String videoUrl) {
+    try {
+      final controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      
+      // Initialize controller
+      controller.initialize().then((_) {
+        if (mounted) {
+          setState(() {});
+          print('[VIDEO_CAROUSEL] ✅ MP4 controller initialized for video $index');
+        }
+      }).catchError((error) {
+        print('[VIDEO_CAROUSEL] ❌ Error initializing MP4 controller: $error');
+      });
+      
+      // Add listener for state changes
+      controller.addListener(() => _onMp4PlayerStateChange(index));
+      
+      _mp4Controllers[index] = controller;
+    } catch (e) {
+      print('[VIDEO_CAROUSEL] ❌ Error creating MP4 controller: $e');
+    }
+  }
+  
+  /// Handle YouTube player state changes
   void _onPlayerStateChange(int index) {
     if (index != _currentVideoIndex) return;
     
-    final controller = _controllers[index];
+    final controller = _youtubeControllers[index];
+    if (controller == null) return;
+
+    if (controller.value.isPlaying && _watchTimer == null) {
+      _startWatchTimer(index);
+    } else if (!controller.value.isPlaying && _watchTimer != null) {
+      _stopWatchTimer();
+    }
+  }
+  
+  /// Handle MP4 player state changes
+  void _onMp4PlayerStateChange(int index) {
+    if (index != _currentVideoIndex) return;
+    
+    final controller = _mp4Controllers[index];
     if (controller == null) return;
 
     if (controller.value.isPlaying && _watchTimer == null) {
@@ -119,10 +203,14 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     }
   }
 
+
   void _startWatchTimer(int index) {
     _watchTimer?.cancel();
     _watchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_controllers[index]?.value.isPlaying == true) {
+      // ✅ Check video type để lấy đúng controller
+      final isPlaying = _isVideoPlaying(index);
+      
+      if (isPlaying) {
         setState(() {
           _watchSeconds[index] = (_watchSeconds[index] ?? 0) + 1;
         });
@@ -138,6 +226,17 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
         }
       }
     });
+  }
+  
+  /// Check if video is currently playing
+  bool _isVideoPlaying(int index) {
+    final videoType = _videoTypes[index];
+    
+    if (videoType == VideoType.youtube) {
+      return _youtubeControllers[index]?.value.isPlaying ?? false;
+    } else {
+      return _mp4Controllers[index]?.value.isPlaying ?? false;
+    }
   }
 
   void _stopWatchTimer() {
@@ -247,11 +346,8 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     
     final oldIndex = _currentVideoIndex;
     
-    // Pause video cũ
-    if (_controllers[oldIndex] != null) {
-      _controllers[oldIndex]!.pause();
-      print('[VIDEO_CAROUSEL] ⏸️ Paused video $oldIndex');
-    }
+    // ✅ Pause video cũ (YouTube hoặc MP4)
+    _pauseVideo(oldIndex);
     _stopWatchTimer();
 
     // Update state - Điều này sẽ trigger rebuild với key mới
@@ -261,6 +357,123 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
 
     print('[VIDEO_CAROUSEL] ✅ Switched to video $newIndex');
     print('[VIDEO_CAROUSEL] 🎬 Video: ${_videos[newIndex].videoTitle}');
+  }
+  
+  /// Pause video (YouTube or MP4)
+  void _pauseVideo(int index) {
+    final videoType = _videoTypes[index];
+    
+    if (videoType == VideoType.youtube) {
+      if (_youtubeControllers[index] != null) {
+        _youtubeControllers[index]!.pause();
+        print('[VIDEO_CAROUSEL] ⏸️ Paused YouTube video $index');
+      }
+    } else {
+      if (_mp4Controllers[index] != null) {
+        _mp4Controllers[index]!.pause();
+        print('[VIDEO_CAROUSEL] ⏸️ Paused MP4 video $index');
+      }
+    }
+  }
+  
+  /// Play video (YouTube or MP4)
+  void _playVideo(int index) {
+    final videoType = _videoTypes[index];
+    
+    if (videoType == VideoType.youtube) {
+      if (_youtubeControllers[index] != null) {
+        _youtubeControllers[index]!.play();
+        print('[VIDEO_CAROUSEL] ▶️ Playing YouTube video $index');
+      }
+    } else {
+      if (_mp4Controllers[index] != null) {
+        _mp4Controllers[index]!.play();
+        print('[VIDEO_CAROUSEL] ▶️ Playing MP4 video $index');
+      }
+    }
+  }
+
+  /// Build video player widget (YouTube or MP4)
+  Widget _buildVideoPlayerWidget() {
+    final videoType = _videoTypes[_currentVideoIndex];
+    
+    if (videoType == VideoType.youtube) {
+      final controller = _youtubeControllers[_currentVideoIndex];
+      if (controller == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      
+      return YoutubePlayer(
+        key: ValueKey('youtube_$_currentVideoIndex'),
+        controller: controller,
+        showVideoProgressIndicator: true,
+        progressColors: const ProgressBarColors(
+          playedColor: Colors.red,
+          handleColor: Colors.redAccent,
+        ),
+      );
+    } else {
+      final controller = _mp4Controllers[_currentVideoIndex];
+      if (controller == null || !controller.value.isInitialized) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      
+      return AspectRatio(
+        aspectRatio: controller.value.aspectRatio,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            VideoPlayer(controller),
+            // Play/Pause overlay
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (controller.value.isPlaying) {
+                    controller.pause();
+                  } else {
+                    controller.play();
+                  }
+                });
+              },
+              child: Container(
+                color: Colors.transparent,
+                child: Center(
+                  child: controller.value.isPlaying
+                      ? Container()  // Hide play button when playing
+                      : Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            size: 50,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+            // Video progress bar
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: VideoProgressIndicator(
+                controller,
+                allowScrubbing: true,
+                colors: const VideoProgressColors(
+                  playedColor: Colors.red,
+                  bufferedColor: Colors.grey,
+                  backgroundColor: Colors.white24,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -338,8 +551,14 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
       );
     }
 
-    final controller = _controllers[_currentVideoIndex];
-    if (controller == null) {
+    // ✅ Check if controller is ready (YouTube or MP4)
+    final videoType = _videoTypes[_currentVideoIndex];
+    final isControllerReady = videoType == VideoType.youtube
+        ? _youtubeControllers[_currentVideoIndex] != null
+        : (_mp4Controllers[_currentVideoIndex] != null && 
+           _mp4Controllers[_currentVideoIndex]!.value.isInitialized);
+    
+    if (!isControllerReady) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -366,22 +585,15 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
           // Video Player
           Container(
             height: 240,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Stack(
               children: [
+                // ✅ Hiển thị YouTube Player hoặc MP4 Player tùy theo video type
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: YoutubePlayer(
-                    key: ValueKey(_currentVideoIndex), // Force rebuild khi đổi video
-                    controller: controller,
-                    showVideoProgressIndicator: true,
-                    progressColors: const ProgressBarColors(
-                      playedColor: Colors.red,
-                      handleColor: Colors.redAccent,
-                    ),
-                  ),
+                  child: _buildVideoPlayerWidget(),
                 ),
               
               // Countdown indicator - CHỈ hiển thị khi chưa đủ 30 giây
@@ -581,6 +793,27 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
         ],
       ),
     );
+  }
+  
+  @override
+  void dispose() {
+    // ✅ Dispose all YouTube controllers
+    for (final controller in _youtubeControllers.values) {
+      controller.dispose();
+    }
+    _youtubeControllers.clear();
+    
+    // ✅ Dispose all MP4 controllers
+    for (final controller in _mp4Controllers.values) {
+      controller.dispose();
+    }
+    _mp4Controllers.clear();
+    
+    // Stop timer
+    _watchTimer?.cancel();
+    
+    print('[VIDEO_CAROUSEL] 🗑️ Disposed all video controllers');
+    super.dispose();
   }
 }
 

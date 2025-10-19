@@ -63,6 +63,7 @@ dependencies:
   
   # Video Player
   youtube_player_flutter: ^9.1.2
+  video_player: ^2.8.1  # For direct MP4 playback
   
   # Utilities
   intl: ^0.20.2

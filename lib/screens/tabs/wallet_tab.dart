@@ -235,12 +235,12 @@ class _WalletTabState extends State<WalletTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Balance Card
+              // Balance Card - Compact version (like home tab, but without navigation)
               Card(
                 elevation: 4,
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -255,23 +255,41 @@ class _WalletTabState extends State<WalletTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        localizations.totalBalance,
-                        style: GoogleFonts.roboto(
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
+                      // Header row with icon and title
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.account_balance_wallet,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                localizations.totalBalance,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 16,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
+                      // Balance amount
                       Text(
                         '${walletProvider.formattedBalanceShort} COINZ',
                         style: GoogleFonts.roboto(
-                          fontSize: 36,
+                          fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 8),
+                      // Wallet address with copy button
                       Row(
                         children: [
                           Expanded(
@@ -294,6 +312,8 @@ class _WalletTabState extends State<WalletTab> {
                             tooltip: localizations.locale.languageCode == 'vi'
                                 ? 'Sao chép địa chỉ'
                                 : 'Copy address',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
                         ],
                       ),
