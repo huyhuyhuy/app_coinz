@@ -135,10 +135,11 @@ class WalletModel {
   double get availableBalance => balance;
 
   /// Format balance với số thập phân
+  /// ✅ VẤN ĐỀ 4: Luôn hiển thị đủ 8 chữ số thập phân
   String get formattedBalance => balance.toStringAsFixed(8);
 
-  /// Format balance ngắn gọn (2 số thập phân)
-  String get formattedBalanceShort => balance.toStringAsFixed(2);
+  /// Format balance ngắn gọn - Cập nhật: cũng hiển thị 8 chữ số
+  String get formattedBalanceShort => balance.toStringAsFixed(8);
 
   /// Shortened wallet address (first 6 + ... + last 4)
   String get shortWalletAddress {

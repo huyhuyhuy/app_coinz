@@ -2,16 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'dart:io';
 
 import '../providers/auth_provider.dart';
+import '../providers/mining_provider.dart';
+import '../providers/wallet_provider.dart';
 import '../utils/app_localizations.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../repositories/friends_repository.dart';
+import '../repositories/user_repository.dart';
+import '../services/storage_service.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/mining_tab.dart';
 import 'tabs/wallet_tab.dart';
 import 'kyc_screen.dart';
+import 'login_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -51,6 +59,8 @@ class _MainScreenState extends State<MainScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        // ✅ FIX: Không hiển thị back button trên main screen
+        automaticallyImplyLeading: false,
         actions: const [
           LanguageSelector(),
         ],
@@ -286,6 +296,8 @@ class _FriendsTabState extends State<FriendsTab> {
   }
 
   Widget _buildFriendCard(BuildContext context, FriendInfo friend, {bool isReferrer = false}) {
+    final avatarUrl = friend.user.avatarUrl;
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -299,16 +311,21 @@ class _FriendsTabState extends State<FriendsTab> {
               backgroundColor: isReferrer 
                   ? Colors.purple.shade100
                   : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              child: Text(
-                friend.user.initials,
-                style: GoogleFonts.roboto(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isReferrer 
-                      ? Colors.purple.shade700
-                      : Theme.of(context).colorScheme.primary,
-                ),
-              ),
+              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: avatarUrl == null || avatarUrl.isEmpty
+                  ? Text(
+                      friend.user.initials,
+                      style: GoogleFonts.roboto(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isReferrer 
+                            ? Colors.purple.shade700
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(width: 16),
 
@@ -317,6 +334,7 @@ class _FriendsTabState extends State<FriendsTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Tên và badge
                   Row(
                     children: [
                       Flexible(
@@ -353,40 +371,29 @@ class _FriendsTabState extends State<FriendsTab> {
                     ],
                   ),
                   const SizedBox(height: 4),
+                  // ✅ VẤN ĐỀ 3: Chỉ hiển thị trạng thái online/offline, ẩn coin và tốc độ
                   Row(
                     children: [
-                      Icon(Icons.monetization_on, size: 14, color: Colors.orange[600]),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${friend.formattedBalance} COINZ',
-                        style: GoogleFonts.roboto(
-                          fontSize: 13,
-                          color: Colors.grey[700],
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: friend.isOnline ? Colors.green : Colors.grey[400],
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.speed, size: 14, color: Colors.blue[600]),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Text(
-                        '${friend.formattedSpeed}/s',
+                        friend.isOnline ? 'Online' : 'Offline',
                         style: GoogleFonts.roboto(
                           fontSize: 13,
-                          color: Colors.grey[700],
+                          color: friend.isOnline ? Colors.green[700] : Colors.grey[600],
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ],
-              ),
-            ),
-
-            // Online status
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: friend.isOnline ? Colors.green : Colors.grey[400],
               ),
             ),
           ],
@@ -396,8 +403,188 @@ class _FriendsTabState extends State<FriendsTab> {
   }
 }
 
-class ProfileTab extends StatelessWidget {
+class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
+
+  @override
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  bool _isUploadingAvatar = false;
+  final ImagePicker _imagePicker = ImagePicker();
+  final UserRepository _userRepo = UserRepository();
+
+  /// Pick, crop và upload avatar
+  Future<void> _pickAndUploadAvatar(BuildContext context) async {
+    final localizations = AppLocalizations.of(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    if (authProvider.userId == null) return;
+
+    try {
+      // Show options: Camera or Gallery
+      final ImageSource? source = await showModalBottomSheet<ImageSource>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(localizations.locale.languageCode == 'vi'
+                    ? 'Chụp ảnh'
+                    : 'Take Photo'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: Text(localizations.locale.languageCode == 'vi'
+                    ? 'Chọn từ thư viện'
+                    : 'Choose from Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (source == null) return;
+
+      // Pick image
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      // Crop image thành hình vuông (Version 8.x API)
+      final CroppedFile? croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1), // Hình vuông
+        compressQuality: 85,
+        maxWidth: 512,
+        maxHeight: 512,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: localizations.locale.languageCode == 'vi'
+                ? 'Chỉnh sửa ảnh đại diện'
+                : 'Edit Avatar',
+            toolbarColor: Theme.of(context).colorScheme.primary,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.square,
+            lockAspectRatio: true,
+            hideBottomControls: false,
+          ),
+          IOSUiSettings(
+            title: localizations.locale.languageCode == 'vi'
+                ? 'Chỉnh sửa ảnh đại diện'
+                : 'Edit Avatar',
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) return;
+
+      // Start uploading
+      setState(() {
+        _isUploadingAvatar = true;
+      });
+
+      // Validate file
+      final imageFile = File(croppedFile.path);
+      final validationError = StorageService.validateImageFile(imageFile);
+      
+      if (validationError != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(validationError),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        setState(() {
+          _isUploadingAvatar = false;
+        });
+        return;
+      }
+
+      // Upload to Supabase Storage
+      final avatarUrl = await StorageService.uploadAvatar(
+        userId: authProvider.userId!,
+        imageFile: imageFile,
+      );
+
+      if (avatarUrl == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(localizations.locale.languageCode == 'vi'
+                  ? 'Upload ảnh thất bại'
+                  : 'Failed to upload avatar'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        setState(() {
+          _isUploadingAvatar = false;
+        });
+        return;
+      }
+
+      // Update avatar_url in database
+      final success = await _userRepo.updateAvatarUrl(
+        authProvider.userId!,
+        avatarUrl,
+      );
+
+      setState(() {
+        _isUploadingAvatar = false;
+      });
+
+      if (success && mounted) {
+        // Refresh current user data để cập nhật avatar URL
+        await authProvider.refreshCurrentUser();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localizations.locale.languageCode == 'vi'
+                ? '✅ Cập nhật ảnh đại diện thành công!'
+                : '✅ Avatar updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localizations.locale.languageCode == 'vi'
+                ? 'Lưu ảnh đại diện thất bại'
+                : 'Failed to save avatar'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('[PROFILE_TAB] ❌ Error uploading avatar: $e');
+      
+      setState(() {
+        _isUploadingAvatar = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -409,22 +596,76 @@ class ProfileTab extends StatelessWidget {
         children: [
           Consumer<AuthProvider>(
             builder: (context, authProvider, child) {
+              final avatarUrl = authProvider.currentUser?.avatarUrl;
+              
               return Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: Text(
-                          authProvider.userName?.substring(0, 1).toUpperCase() ?? 'U',
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                      // Avatar với camera icon
+                      Stack(
+                        children: [
+                          // Avatar
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                                ? NetworkImage(avatarUrl)
+                                : null,
+                            child: avatarUrl == null || avatarUrl.isEmpty
+                                ? Text(
+                                    authProvider.userName?.substring(0, 1).toUpperCase() ?? 'U',
+                                    style: const TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : null,
                           ),
-                        ),
+                          
+                          // Camera icon button (góc dưới bên phải)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: InkWell(
+                              onTap: _isUploadingAvatar ? null : () => _pickAndUploadAvatar(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: _isUploadingAvatar
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.camera_alt,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -507,10 +748,29 @@ class ProfileTab extends StatelessWidget {
             leading: const Icon(Icons.logout),
             title: Text(localizations.logout),
             onTap: () async {
+              // ✅ VẤN ĐỀ 5: Reset toàn bộ providers khi logout
               final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+              final miningProvider = Provider.of<MiningProvider>(context, listen: false);
+              
+              // Stop mining nếu đang chạy
+              if (miningProvider.isMining && authProvider.userId != null) {
+                await miningProvider.stopMining(authProvider.userId!);
+              }
+              
+              // Reset providers
+              walletProvider.reset();
+              miningProvider.reset();
+              
+              // Logout auth (clear database & prefs)
               await authProvider.logout();
+              
               if (context.mounted) {
-                Navigator.of(context).pushReplacementNamed('/');
+                // ✅ FIX: Clear toàn bộ navigation stack và về LoginScreen
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (Route<dynamic> route) => false, // Remove all routes
+                );
               }
             },
           ),

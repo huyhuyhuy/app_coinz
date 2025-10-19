@@ -28,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
     _checkAuthStatus();
   }
 
+  /// ✅ VẤN ĐỀ 6: Load currentUser khi restore session
   Future<void> _checkAuthStatus() async {
     print('[AUTH_PROVIDER] 🔍 Checking auth status...');
     _isLoading = true;
@@ -51,12 +52,22 @@ class AuthProvider extends ChangeNotifier {
         _userId = userId;
         _userPhone = phone;
 
-        // Sync wallet from server
+        // ✅ VẤN ĐỀ 6: Sync user data từ server để load currentUser
         try {
+          print('[AUTH_PROVIDER] 🔄 Syncing user data from server...');
+          await _userRepo.syncUserFromServer(userId);
+          
+          // Load currentUser từ local database
+          _currentUser = await _userRepo.getLocalUser(userId);
+          if (_currentUser != null) {
+            print('[AUTH_PROVIDER] ✅ Current user loaded: ${_currentUser!.referralCode}, referrals: ${_currentUser!.totalReferrals}');
+          }
+          
+          // Sync wallet from server
           await _walletRepo.syncWalletFromServer(userId);
           print('[AUTH_PROVIDER] ✅ Session restored successfully');
         } catch (e) {
-          print('[AUTH_PROVIDER] ⚠️ Failed to sync wallet: $e');
+          print('[AUTH_PROVIDER] ⚠️ Failed to sync data: $e');
         }
       } else {
         print('[AUTH_PROVIDER] ℹ️ No session found');
@@ -72,6 +83,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// ✅ VẤN ĐỀ 6: Load đầy đủ thông tin user từ server khi login
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     notifyListeners();
@@ -89,6 +101,17 @@ class AuthProvider extends ChangeNotifier {
         _userEmail = user.email;
         _userName = user.fullName;
         _userPhone = user.phoneNumber;
+
+        // ✅ VẤN ĐỀ 6: Sync user data từ server để lấy totalReferrals mới nhất
+        print('[AUTH_PROVIDER] 🔄 Syncing user data from server...');
+        await _userRepo.syncUserFromServer(user.userId);
+        
+        // Reload current user sau khi sync
+        final updatedUser = await _userRepo.getLocalUser(user.userId);
+        if (updatedUser != null) {
+          _currentUser = updatedUser;
+          print('[AUTH_PROVIDER] ✅ User data synced. Total referrals: ${updatedUser.totalReferrals}');
+        }
 
         // Sync wallet from server to local
         await _walletRepo.syncWalletFromServer(user.userId);
@@ -119,6 +142,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// ✅ VẤN ĐỀ 6: Load đầy đủ thông tin user từ server khi register
   Future<bool> register(String fullName, String phoneNumber, String email, String password, String confirmPassword, [String? referralCode]) async {
     _isLoading = true;
     notifyListeners();
@@ -152,6 +176,17 @@ class AuthProvider extends ChangeNotifier {
         _userName = user.fullName;
         _userPhone = user.phoneNumber;
 
+        // ✅ VẤN ĐỀ 6: Sync user data từ server để đảm bảo có đầy đủ thông tin
+        print('[AUTH_PROVIDER] 🔄 Syncing new user data from server...');
+        await _userRepo.syncUserFromServer(user.userId);
+        
+        // Reload current user sau khi sync
+        final updatedUser = await _userRepo.getLocalUser(user.userId);
+        if (updatedUser != null) {
+          _currentUser = updatedUser;
+          print('[AUTH_PROVIDER] ✅ New user data synced. Referral code: ${updatedUser.referralCode}');
+        }
+
         // Create wallet for new user
         await _walletRepo.createWallet(user.userId);
 
@@ -181,6 +216,31 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// 🔄 Refresh current user data (sau khi upload avatar)
+  Future<void> refreshCurrentUser() async {
+    if (_userId == null) return;
+    
+    try {
+      print('[AUTH_PROVIDER] 🔄 Refreshing current user data...');
+      
+      // Sync user data từ server
+      await _userRepo.syncUserFromServer(_userId!);
+      
+      // Reload current user từ local database
+      final updatedUser = await _userRepo.getLocalUser(_userId!);
+      if (updatedUser != null) {
+        _currentUser = updatedUser;
+        _userName = updatedUser.fullName;
+        _userPhone = updatedUser.phoneNumber;
+        print('[AUTH_PROVIDER] ✅ Current user refreshed: ${updatedUser.email}');
+        notifyListeners();
+      }
+    } catch (e) {
+      print('[AUTH_PROVIDER] ❌ Failed to refresh current user: $e');
+    }
+  }
+
+  /// ✅ VẤN ĐỀ 5: Logout và reset toàn bộ providers
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();
@@ -197,7 +257,7 @@ class AuthProvider extends ChangeNotifier {
       await prefs.remove('user_phone');
       print('[AUTH_PROVIDER] ✅ SharedPreferences cleared');
 
-      // Clear local database
+      // Clear local database - xóa TOÀN BỘ data
       try {
         final db = await DatabaseHelper.instance.database;
 
@@ -212,7 +272,7 @@ class AuthProvider extends ChangeNotifier {
         await db.delete('news_cache');
         await db.delete('settings');
 
-        print('[AUTH_PROVIDER] ✅ Local database cleared');
+        print('[AUTH_PROVIDER] ✅ Local database cleared - ALL DATA DELETED');
       } catch (e) {
         print('[AUTH_PROVIDER] ⚠️ Failed to clear database: $e');
       }
@@ -226,6 +286,8 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = null;
 
       print('[AUTH_PROVIDER] ✅ Logout successful');
+      
+      // NOTE: Wallet & Mining providers sẽ được reset từ ProfileTab
     } catch (e) {
       print('[AUTH_PROVIDER] ❌ Logout error: $e');
     } finally {

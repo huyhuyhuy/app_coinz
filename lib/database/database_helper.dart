@@ -79,13 +79,21 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     print('[DATABASE] ⬆️ Upgrading database from version $oldVersion to $newVersion...');
 
-    // TODO: Implement migration logic khi có version mới
-    // Ví dụ:
-    // if (oldVersion < 2) {
-    //   await db.execute('ALTER TABLE users ADD COLUMN new_field TEXT');
-    // }
+    try {
+      // Migration từ version 1 lên 2: Thêm cột updated_at vào bảng transactions
+      if (oldVersion < 2) {
+        print('[DATABASE] 🔧 Adding updated_at column to transactions table...');
+        await db.execute('ALTER TABLE transactions ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP');
+        print('[DATABASE] ✅ Migration to version 2 completed');
+      }
 
-    print('[DATABASE] ✅ Database upgraded successfully!');
+      print('[DATABASE] ✅ Database upgraded successfully!');
+    } catch (e) {
+      print('[DATABASE] ❌ Error during migration: $e');
+      // Nếu migration fail, có thể cần reset database
+      print('[DATABASE] ⚠️ Consider calling resetDatabase() if issues persist');
+      rethrow;
+    }
   }
 
   /// Callback khi mở database

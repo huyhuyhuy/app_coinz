@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import '../utils/app_localizations.dart';
+import '../providers/auth_provider.dart';
 
 class KYCScreen extends StatefulWidget {
   const KYCScreen({super.key});
@@ -152,8 +154,8 @@ class _KYCScreenState extends State<KYCScreen> {
                     Expanded(
                       child: Text(
                         localizations.locale.languageCode == 'vi'
-                            ? 'Vui lòng điền đầy đủ thông tin để xác minh danh tính. Thông tin của bạn sẽ được bảo mật.'
-                            : 'Please fill in all information for identity verification. Your data will be kept secure.',
+                            ? 'Vui lòng điền đầy đủ thông tin để xác minh danh tính.'
+                            : 'Please fill in all information for identity verification.',
                         style: GoogleFonts.roboto(
                           fontSize: 13,
                           color: Colors.blue.shade700,
@@ -308,22 +310,151 @@ class _KYCScreenState extends State<KYCScreen> {
               const SizedBox(height: 16),
 
               // Bank Account Name
-              TextFormField(
-                controller: _bankAccountNameController,
-                decoration: InputDecoration(
-                  labelText: localizations.bankAccountName,
-                  hintText: 'NGUYEN VAN A',
-                  prefixIcon: const Icon(Icons.person_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                textCapitalization: TextCapitalization.characters,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return localizations.pleaseEnterBankAccountName;
-                  }
-                  return null;
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  final registeredName = authProvider.userName ?? '';
+                  
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _bankAccountNameController,
+                        decoration: InputDecoration(
+                          labelText: localizations.bankAccountName,
+                          hintText: 'NGUYEN VAN A',
+                          prefixIcon: const Icon(Icons.person_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        textCapitalization: TextCapitalization.characters,
+                        onChanged: (value) {
+                          // Trigger validation khi user nhập
+                          setState(() {});
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return localizations.pleaseEnterBankAccountName;
+                          }
+                          
+                          // ✅ Validation: Check khớp với tên đăng ký
+                          final inputName = value.trim().toUpperCase();
+                          final expectedName = registeredName.trim().toUpperCase();
+                          
+                          // Normalize spaces (loại bỏ khoảng trắng thừa)
+                          final normalizedInput = inputName.replaceAll(RegExp(r'\s+'), ' ');
+                          final normalizedExpected = expectedName.replaceAll(RegExp(r'\s+'), ' ');
+                          
+                          if (normalizedInput != normalizedExpected) {
+                            return localizations.locale.languageCode == 'vi'
+                                ? '❌ Tên tài khoản phải khớp với tên đăng ký: "$registeredName"'
+                                : '❌ Account name must match registration name: "$registeredName"';
+                          }
+                          
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // ⚠️ Thông báo quan trọng về tên tài khoản ngân hàng
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade300, width: 1),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red.shade700,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    localizations.locale.languageCode == 'vi'
+                                        ? '⚠️ Tên tài khoản ngân hàng phải:'
+                                        : '⚠️ Bank account name must:',
+                                    style: GoogleFonts.roboto(
+                                      fontSize: 13,
+                                      color: Colors.red.shade900,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 28),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    localizations.locale.languageCode == 'vi'
+                                        ? '1. Trùng khớp với tên trên CMND/CCCD'
+                                        : '1. Match with name on ID card',
+                                    style: GoogleFonts.roboto(
+                                      fontSize: 12,
+                                      color: Colors.red.shade800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: Colors.red.shade200),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.info, 
+                                          size: 16, 
+                                          color: Colors.blue.shade700,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            localizations.locale.languageCode == 'vi'
+                                                ? 'Nếu không khớp, KYC sẽ thất bại!'
+                                                : 'If not matched, KYC will fail!',
+                                            style: GoogleFonts.roboto(
+                                              fontSize: 11,
+                                              color: Colors.blue.shade900,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // ✅ Live validation indicator
+                      if (_bankAccountNameController.text.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _buildValidationIndicator(
+                            _bankAccountNameController.text.trim().toUpperCase().replaceAll(RegExp(r'\s+'), ' '),
+                            registeredName.trim().toUpperCase().replaceAll(RegExp(r'\s+'), ' '),
+                            localizations,
+                          ),
+                        ),
+                    ],
+                  );
                 },
               ),
 
@@ -473,6 +604,53 @@ class _KYCScreenState extends State<KYCScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Widget hiển thị trạng thái validation real-time
+  Widget _buildValidationIndicator(
+    String inputName,
+    String expectedName,
+    AppLocalizations localizations,
+  ) {
+    final isMatch = inputName == expectedName;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isMatch ? Colors.green.shade50 : Colors.red.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isMatch ? Colors.green.shade300 : Colors.red.shade300,
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isMatch ? Icons.check_circle : Icons.cancel,
+            color: isMatch ? Colors.green.shade700 : Colors.red.shade700,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              isMatch
+                  ? (localizations.locale.languageCode == 'vi'
+                      ? '✅ Tên khớp! Bạn có thể tiếp tục.'
+                      : '✅ Name matched! You can proceed.')
+                  : (localizations.locale.languageCode == 'vi'
+                      ? '❌ Tên chưa khớp. Vui lòng nhập chính xác: "$expectedName"'
+                      : '❌ Name not matched. Please enter exactly: "$expectedName"'),
+              style: GoogleFonts.roboto(
+                fontSize: 12,
+                color: isMatch ? Colors.green.shade900 : Colors.red.shade900,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

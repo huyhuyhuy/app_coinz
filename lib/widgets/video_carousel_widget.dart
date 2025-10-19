@@ -27,6 +27,7 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
   Map<int, YoutubePlayerController> _controllers = {};
   Map<int, int> _watchSeconds = {};
   Map<int, bool> _videoClaimed = {};
+  Map<int, bool> _isClaimingReward = {}; // Prevent multiple claim calls
   
   Timer? _watchTimer;
   static const int _requiredWatchSeconds = 30;
@@ -71,6 +72,7 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
           _initializeVideoController(i, videos[i].videoUrl);
           _watchSeconds[i] = 0;
           _videoClaimed[i] = false;
+          _isClaimingReward[i] = false;
         }
       } else {
         print('[VIDEO_CAROUSEL] ⚠️ No active videos available');
@@ -128,7 +130,9 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
         print('[VIDEO_CAROUSEL] ⏱️ Video $index watch time: ${_watchSeconds[index]}s / $_requiredWatchSeconds s');
 
         // Tự động claim khi đủ 30 giây
-        if (_watchSeconds[index]! >= _requiredWatchSeconds && !(_videoClaimed[index] ?? false)) {
+        if (_watchSeconds[index]! >= _requiredWatchSeconds && 
+            !(_videoClaimed[index] ?? false) && 
+            !(_isClaimingReward[index] ?? false)) {
           timer.cancel();
           _autoClaimReward(index);
         }
@@ -147,7 +151,15 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
       return;
     }
 
+    if (_isClaimingReward[index] == true) {
+      print('[VIDEO_CAROUSEL] ⚠️ Already claiming reward for video $index');
+      return;
+    }
+
     print('[VIDEO_CAROUSEL] 💰 Auto-claiming reward for video $index...');
+    
+    // Set claiming flag
+    _isClaimingReward[index] = true;
     
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
@@ -159,6 +171,32 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     final completed = watchDuration >= _requiredWatchSeconds;
 
     try {
+      // ✅ VẤN ĐỀ 1: Check xem user đã xem video này trong ngày chưa
+      final hasViewedToday = await _videoAdRepo.hasUserViewedToday(
+        authProvider.userId!,
+        video.adId,
+      );
+
+      if (hasViewedToday) {
+        print('[VIDEO_CAROUSEL] ⚠️ Video đã được xem và nhận thưởng trong ngày hôm nay');
+        
+        setState(() {
+          _videoClaimed[index] = true;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('⚠️ Bạn đã xem video này hôm nay. Mỗi video chỉ nhận thưởng 1 lần/ngày.'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Chưa xem hôm nay, tiến hành claim
       final success = await _videoAdRepo.recordVideoView(
         userId: authProvider.userId!,
         adId: video.adId,
@@ -176,6 +214,7 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
           setState(() {
             _videos = updatedVideos;
             _videoClaimed[index] = true;
+            _isClaimingReward[index] = false; // Reset claiming flag
           });
         }
 
@@ -185,14 +224,19 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('🎉 Nhận thưởng thành công! +${video.rewardAmount.toStringAsFixed(3)} COINZ'),
+            content: Text('🎉 Nhận thưởng thành công! +${video.rewardAmount.toStringAsFixed(8)} COINZ'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
         );
+      } else {
+        // Reset claiming flag if failed
+        _isClaimingReward[index] = false;
       }
     } catch (e) {
       print('[VIDEO_CAROUSEL] ❌ Error claiming reward: $e');
+      // Reset claiming flag on error
+      _isClaimingReward[index] = false;
     }
   }
 

@@ -1,10 +1,12 @@
 import '../database/database_helper.dart';
 import '../services/supabase_service.dart';
 import '../models/models.dart';
+import 'transaction_repository.dart';
 
 /// Wallet Repository - Quản lý ví coin (local + server)
 class WalletRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+  final TransactionRepository _transactionRepo = TransactionRepository();
   
   // ============================================================================
   // LOCAL DATABASE OPERATIONS
@@ -250,7 +252,8 @@ class WalletRepository {
     return await updateBalance(userId, amount, isAdd: false);
   }
 
-  /// Transfer coins between users (internal transfer)
+  /// ✅ FIX: Transfer coins between users (internal transfer)
+  /// Cập nhật đồng bộ cả LOCAL và SERVER, tạo transaction history
   Future<bool> transferInternal({
     required String fromUserId,
     required String toWalletAddress,
@@ -258,11 +261,11 @@ class WalletRepository {
   }) async {
     try {
       print('[WALLET_REPO] 💸 Starting internal transfer...');
-      print('[WALLET_REPO] From: $fromUserId');
-      print('[WALLET_REPO] To: $toWalletAddress');
-      print('[WALLET_REPO] Amount: $amount');
+      print('[WALLET_REPO] From User ID: $fromUserId');
+      print('[WALLET_REPO] To Wallet: $toWalletAddress');
+      print('[WALLET_REPO] Amount: $amount COINZ');
 
-      // Get sender's wallet
+      // ========== STEP 1: Validate sender ==========
       final senderWallet = await getLocalWallet(fromUserId);
       if (senderWallet == null) {
         print('[WALLET_REPO] ❌ Sender wallet not found');
@@ -271,24 +274,27 @@ class WalletRepository {
 
       // Check balance
       if (senderWallet.balance < amount) {
-        print('[WALLET_REPO] ❌ Insufficient balance');
+        print('[WALLET_REPO] ❌ Insufficient balance: ${senderWallet.balance} < $amount');
         return false;
       }
 
-      // Find recipient by wallet address
-      final db = await _dbHelper.database;
-      final recipientResult = await db.query(
-        'wallets',
-        where: 'wallet_address = ?',
-        whereArgs: [toWalletAddress],
-      );
-
-      if (recipientResult.isEmpty) {
-        print('[WALLET_REPO] ❌ Recipient wallet not found');
+      // ========== STEP 2: Find recipient FROM SERVER (quan trọng!) ==========
+      print('[WALLET_REPO] 🔍 Looking up recipient wallet on SERVER...');
+      WalletModel? recipientWallet;
+      
+      try {
+        final response = await SupabaseService.client
+            .from('wallets')
+            .select()
+            .eq('wallet_address', toWalletAddress)
+            .single();
+        
+        recipientWallet = WalletModel.fromJson(response);
+        print('[WALLET_REPO] ✅ Found recipient: ${recipientWallet.userId}');
+      } catch (e) {
+        print('[WALLET_REPO] ❌ Recipient wallet not found on server: $e');
         return false;
       }
-
-      final recipientWallet = WalletModel.fromMap(recipientResult.first);
 
       // Prevent self-transfer
       if (senderWallet.userId == recipientWallet.userId) {
@@ -296,25 +302,109 @@ class WalletRepository {
         return false;
       }
 
-      // Perform transfer
-      // 1. Subtract from sender
-      await updateBalance(fromUserId, amount, isAdd: false);
+      // ========== STEP 3: Update sender wallet (LOCAL + SERVER) ==========
+      print('[WALLET_REPO] 📤 Updating sender wallet...');
+      
+      final senderBalanceBefore = senderWallet.balance;
+      final senderBalanceAfter = senderBalanceBefore - amount;
+      
+      final updatedSenderWallet = senderWallet.copyWith(
+        balance: senderBalanceAfter,
+        totalSpent: senderWallet.totalSpent + amount,
+        updatedAt: DateTime.now(),
+      );
 
-      // 2. Add to recipient
-      final recipientUpdated = recipientWallet.copyWith(
-        balance: recipientWallet.balance + amount,
+      // Update local
+      await updateLocalWallet(updatedSenderWallet);
+      
+      // Update server
+      await updateServerWallet(updatedSenderWallet);
+      print('[WALLET_REPO] ✅ Sender wallet updated: ${senderBalanceBefore.toStringAsFixed(8)} → ${senderBalanceAfter.toStringAsFixed(8)}');
+
+      // ========== STEP 4: Update recipient wallet (LOCAL + SERVER) ==========
+      print('[WALLET_REPO] 📥 Updating recipient wallet...');
+      
+      final recipientBalanceBefore = recipientWallet.balance;
+      final recipientBalanceAfter = recipientBalanceBefore + amount;
+      
+      final updatedRecipientWallet = recipientWallet.copyWith(
+        balance: recipientBalanceAfter,
         totalEarned: recipientWallet.totalEarned + amount,
         updatedAt: DateTime.now(),
       );
-      await updateLocalWallet(recipientUpdated);
 
-      // 3. Create transaction record (optional - for history)
-      // TODO: Implement transaction history
+      // Update server FIRST (quan trọng!)
+      await updateServerWallet(updatedRecipientWallet);
+      
+      // Update local (hoặc sync from server)
+      try {
+        await updateLocalWallet(updatedRecipientWallet);
+      } catch (e) {
+        // Nếu recipient chưa có trong local, save mới
+        await saveLocalWallet(updatedRecipientWallet);
+      }
+      
+      print('[WALLET_REPO] ✅ Recipient wallet updated: ${recipientBalanceBefore.toStringAsFixed(8)} → ${recipientBalanceAfter.toStringAsFixed(8)}');
 
-      print('[WALLET_REPO] ✅ Internal transfer completed successfully');
+      // ========== STEP 5: Create transaction records ==========
+      print('[WALLET_REPO] 📝 Creating transaction records...');
+      
+      final now = DateTime.now();
+      final transactionId = _transactionRepo.generateTransactionId();
+
+      // Transaction cho người GỬI
+      final senderTransaction = TransactionModel(
+        transactionId: '${transactionId}-send',
+        userId: fromUserId,
+        transactionType: 'transfer_send',
+        amount: amount,
+        netAmount: amount,
+        balanceBefore: senderBalanceBefore,
+        balanceAfter: senderBalanceAfter,
+        fromUserId: fromUserId,
+        toUserId: recipientWallet.userId,
+        description: 'Transfer to ${toWalletAddress}',
+        status: 'completed',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      // Transaction cho người NHẬN
+      final recipientTransaction = TransactionModel(
+        transactionId: '${transactionId}-receive',
+        userId: recipientWallet.userId,
+        transactionType: 'transfer_receive',
+        amount: amount,
+        netAmount: amount,
+        balanceBefore: recipientBalanceBefore,
+        balanceAfter: recipientBalanceAfter,
+        fromUserId: fromUserId,
+        toUserId: recipientWallet.userId,
+        description: 'Received from ${senderWallet.walletAddress}',
+        status: 'completed',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      // Save transactions
+      await _transactionRepo.createTransaction(senderTransaction);
+      await _transactionRepo.createTransaction(recipientTransaction);
+      
+      print('[WALLET_REPO] ✅ Transaction history created');
+
+      // ========== DONE ==========
+      print('[WALLET_REPO] 🎉 Internal transfer completed successfully!');
+      print('[WALLET_REPO] Summary:');
+      print('[WALLET_REPO]   - Sender: ${fromUserId}');
+      print('[WALLET_REPO]   - Recipient: ${recipientWallet.userId}');
+      print('[WALLET_REPO]   - Amount: $amount COINZ');
+      print('[WALLET_REPO]   - Sender new balance: $senderBalanceAfter');
+      print('[WALLET_REPO]   - Recipient new balance: $recipientBalanceAfter');
+      
       return true;
     } catch (e) {
-      print('[WALLET_REPO] ❌ Error during internal transfer: $e');
+      print('[WALLET_REPO] ❌ CRITICAL ERROR during internal transfer: $e');
+      print('[WALLET_REPO] ⚠️ Transaction may be incomplete - please verify balances');
       return false;
     }
   }

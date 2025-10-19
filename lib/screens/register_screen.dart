@@ -51,8 +51,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (success && mounted) {
-        Navigator.of(context).pushReplacement(
+        // ✅ FIX: Clear toàn bộ navigation stack khi đăng ký thành công
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const MainScreen()),
+          (Route<dynamic> route) => false, // Remove all previous routes
         );
       } else if (mounted) {
         final localizations = AppLocalizations.of(context);
@@ -131,6 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                  textCapitalization: TextCapitalization.words,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return localizations.pleaseEnterFullName;
@@ -140,6 +143,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     }
                     return null;
                   },
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // ⚠️ Thông báo quan trọng về tên thật
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade300, width: 1),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          localizations.locale.languageCode == 'vi'
+                              ? '⚠️ Vui lòng nhập TÊN THẬT khớp với CMND/CCCD của bạn. Tên này sẽ được dùng để xác minh KYC.'
+                              : '⚠️ Please enter your REAL NAME matching your ID card. This will be used for KYC verification.',
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            color: Colors.orange.shade900,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 
                 const SizedBox(height: 20),

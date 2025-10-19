@@ -2,11 +2,13 @@ import '../database/database_helper.dart';
 import '../services/supabase_service.dart';
 import '../models/models.dart';
 import 'wallet_repository.dart';
+import 'transaction_repository.dart';
 
 /// Mining Repository - Quản lý mining sessions (local + server)
 class MiningRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final WalletRepository _walletRepo = WalletRepository();
+  final TransactionRepository _transactionRepo = TransactionRepository();
   
   // ============================================================================
   // LOCAL DATABASE OPERATIONS
@@ -185,8 +187,33 @@ class MiningRepository {
       // Update local
       await updateLocalMiningSession(updatedSession);
       
+      // Get wallet để lấy balance trước/sau
+      final wallet = await _walletRepo.getLocalWallet(userId);
+      final balanceBefore = wallet?.balance ?? 0.0;
+      final balanceAfter = balanceBefore + coinsMined;
+      
       // Add coins to wallet
       await _walletRepo.addCoins(userId, coinsMined);
+      
+      // ✅ Tạo transaction record cho mining reward
+      if (coinsMined > 0) {
+        final transaction = TransactionModel(
+          transactionId: _generateUuid(),
+          userId: userId,
+          transactionType: 'mining',
+          amount: coinsMined,
+          netAmount: coinsMined,
+          balanceBefore: balanceBefore,
+          balanceAfter: balanceAfter,
+          description: 'Mining session reward',
+          status: 'completed',
+          createdAt: now,
+          updatedAt: now,
+        );
+        
+        await _transactionRepo.createTransaction(transaction);
+        print('[MINING_REPO] ✅ Mining transaction created: $coinsMined COINZ');
+      }
       
       // Update server (async, don't wait)
       updateServerMiningSession(updatedSession).catchError((e) {

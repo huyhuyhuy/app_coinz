@@ -66,10 +66,11 @@ class MiningProvider with ChangeNotifier {
   }
   
   /// Calculate speed multiplier based on total referrals
+  /// ✅ VẤN ĐỀ 2: Cập nhật milestone mới
   double _calculateSpeedMultiplier(int totalReferrals) {
-    if (totalReferrals >= 100) return 4.0; // x4
-    if (totalReferrals >= 50) return 3.0;  // x3
-    if (totalReferrals >= 20) return 2.0;  // x2
+    if (totalReferrals >= 237) return 4.0; // x4
+    if (totalReferrals >= 158) return 3.0; // x3
+    if (totalReferrals >= 79) return 2.0;  // x2
     return 1.0; // x1 (default)
   }
 
@@ -204,6 +205,19 @@ class MiningProvider with ChangeNotifier {
     }
   }
   
+  /// ✅ VẤN ĐỀ 5: Reset mining khi logout
+  void reset() {
+    _stopMiningTimer();
+    _isMining = false;
+    _currentSession = null;
+    _currentCoins = 0.0;
+    _currentDuration = 0;
+    _miningSpeed = 0.001;
+    _speedMultiplier = 1.0;
+    notifyListeners();
+    print('[MINING_PROVIDER] 🔄 Mining provider reset');
+  }
+
   @override
   void dispose() {
     _stopMiningTimer();

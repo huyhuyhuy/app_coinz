@@ -20,8 +20,9 @@ class WalletProvider with ChangeNotifier {
   String get walletAddress => _wallet?.walletAddress ?? '';
   
   // Formatted getters
+  /// ✅ VẤN ĐỀ 4: Luôn hiển thị đủ 8 chữ số thập phân
   String get formattedBalance => balance.toStringAsFixed(8);
-  String get formattedBalanceShort => balance.toStringAsFixed(2);
+  String get formattedBalanceShort => balance.toStringAsFixed(8); // Đổi từ 2 -> 8
   String get shortWalletAddress {
     if (walletAddress.length <= 10) return walletAddress;
     return '${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}';
@@ -189,6 +190,14 @@ class WalletProvider with ChangeNotifier {
       print('[WALLET_PROVIDER] ❌ Error transferring coins: $e');
       return false;
     }
+  }
+
+  /// ✅ VẤN ĐỀ 5: Reset wallet khi logout
+  void reset() {
+    _wallet = null;
+    _isLoading = false;
+    notifyListeners();
+    print('[WALLET_PROVIDER] 🔄 Wallet provider reset');
   }
 }
 

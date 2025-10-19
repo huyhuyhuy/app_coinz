@@ -38,8 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
-        Navigator.of(context).pushReplacement(
+        // ✅ FIX: Clear toàn bộ navigation stack khi login thành công
+        Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const MainScreen()),
+          (Route<dynamic> route) => false, // Remove all previous routes
         );
       } else if (mounted) {
         final localizations = AppLocalizations.of(context);

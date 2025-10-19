@@ -1,11 +1,14 @@
 import '../models/video_ad_model.dart';
+import '../models/models.dart';
 import '../services/supabase_service.dart';
 import '../repositories/wallet_repository.dart';
+import '../repositories/transaction_repository.dart';
 
 /// Repository để quản lý Video Ads
 class VideoAdRepository {
   final _supabase = SupabaseService.client;
   final _walletRepo = WalletRepository();
+  final _transactionRepo = TransactionRepository();
 
   /// Lấy video active ngẫu nhiên từ server
   Future<VideoAdModel?> getRandomActiveVideo() async {
@@ -85,10 +88,37 @@ class VideoAdRepository {
       print('[VIDEO_AD_REPO] ✅ Video view recorded');
       print('[VIDEO_AD_REPO] ℹ️ Database trigger will auto-increment total_views');
 
-      // 2. Nếu xem xong, cộng reward vào wallet
+      // 2. Nếu xem xong, cộng reward vào wallet và tạo transaction
       if (completed && rewardAmount > 0) {
+        // Get wallet để lấy balance trước/sau
+        final wallet = await _walletRepo.getLocalWallet(userId);
+        final balanceBefore = wallet?.balance ?? 0.0;
+        final balanceAfter = balanceBefore + rewardAmount;
+        
+        // Add coins to wallet
         await _walletRepo.addCoins(userId, rewardAmount);
         print('[VIDEO_AD_REPO] ✅ Reward added to wallet: $rewardAmount COINZ');
+        
+        // ✅ Tạo transaction record cho video reward
+        final now = DateTime.now();
+        final transactionId = 'video_reward_${userId}_${adId}_${now.millisecondsSinceEpoch}';
+        
+        final transaction = TransactionModel(
+          transactionId: transactionId,
+          userId: userId,
+          transactionType: 'video_reward',
+          amount: rewardAmount,
+          netAmount: rewardAmount,
+          balanceBefore: balanceBefore,
+          balanceAfter: balanceAfter,
+          description: 'Video ad reward',
+          status: 'completed',
+          createdAt: now,
+          updatedAt: now,
+        );
+        
+        await _transactionRepo.createTransaction(transaction);
+        print('[VIDEO_AD_REPO] ✅ Video reward transaction created: $transactionId');
       }
 
       return true;
@@ -158,7 +188,39 @@ class VideoAdRepository {
     }
   }
 
-  /// Check xem user đã xem video này chưa (trong 24h)
+  /// Check xem user đã xem video này trong ngày hôm nay chưa
+  Future<bool> hasUserViewedToday(String userId, String adId) async {
+    try {
+      // Lấy thời điểm đầu ngày hôm nay (00:00:00)
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+
+      final response = await _supabase
+          .from('video_views')
+          .select('view_id')
+          .eq('user_id', userId)
+          .eq('ad_id', adId)
+          .eq('completed', true) // Chỉ check video đã xem xong
+          .gte('viewed_at', startOfDay.toIso8601String())
+          .limit(1);
+
+      final hasViewed = (response as List).isNotEmpty;
+      
+      if (hasViewed) {
+        print('[VIDEO_AD_REPO] ℹ️ User đã xem video này hôm nay');
+      } else {
+        print('[VIDEO_AD_REPO] ℹ️ User chưa xem video này hôm nay');
+      }
+      
+      return hasViewed;
+    } catch (e) {
+      print('[VIDEO_AD_REPO] ❌ Error checking today view: $e');
+      return false;
+    }
+  }
+
+  /// Check xem user đã xem video này chưa (trong 24h) - DEPRECATED
+  @Deprecated('Use hasUserViewedToday instead')
   Future<bool> hasUserViewedRecently(String userId, String adId) async {
     try {
       final yesterday = DateTime.now().subtract(const Duration(hours: 24));

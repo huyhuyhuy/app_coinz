@@ -329,6 +329,59 @@ class UserRepository {
   }
   
   // ============================================================================
+  // AVATAR OPERATIONS
+  // ============================================================================
+
+  /// Update avatar URL cho user
+  Future<bool> updateAvatarUrl(String userId, String avatarUrl) async {
+    try {
+      print('[USER_REPO] 📸 Updating avatar URL for user: $userId');
+      print('[USER_REPO] 🌐 Avatar URL: $avatarUrl');
+
+      // Update trên server
+      await SupabaseService.client
+          .from('users')
+          .update({'avatar_url': avatarUrl})
+          .eq('id', userId);
+
+      print('[USER_REPO] ✅ Avatar URL updated on server');
+
+      // Sync lại user data từ server
+      await syncUserFromServer(userId);
+
+      print('[USER_REPO] ✅ Avatar update completed');
+      return true;
+    } catch (e) {
+      print('[USER_REPO] ❌ Error updating avatar URL: $e');
+      return false;
+    }
+  }
+
+  /// Delete avatar URL (set null)
+  Future<bool> deleteAvatarUrl(String userId) async {
+    try {
+      print('[USER_REPO] 🗑️ Deleting avatar URL for user: $userId');
+
+      // Update trên server
+      await SupabaseService.client
+          .from('users')
+          .update({'avatar_url': null})
+          .eq('id', userId);
+
+      print('[USER_REPO] ✅ Avatar URL deleted on server');
+
+      // Sync lại user data từ server
+      await syncUserFromServer(userId);
+
+      print('[USER_REPO] ✅ Avatar deletion completed');
+      return true;
+    } catch (e) {
+      print('[USER_REPO] ❌ Error deleting avatar URL: $e');
+      return false;
+    }
+  }
+
+  // ============================================================================
   // HELPER METHODS
   // ============================================================================
 

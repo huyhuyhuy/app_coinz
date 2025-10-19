@@ -6,7 +6,7 @@
 
 class LocalDatabaseSchema {
   static const String databaseName = 'app_coinz_local.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 2;
 
   // ================================================================================
   // TABLE CREATION SCRIPTS
@@ -125,6 +125,7 @@ class LocalDatabaseSchema {
       status TEXT DEFAULT 'pending',
       metadata TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
       synced_to_server INTEGER DEFAULT 0
     )
   ''';

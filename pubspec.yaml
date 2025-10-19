@@ -51,8 +51,9 @@ dependencies:
   http: ^1.1.0
   web_socket_channel: ^2.4.0
   
-  # Image Picker
+  # Image Picker & Cropper
   image_picker: ^1.0.4
+  image_cropper: ^8.0.2
   
   # WebView
   webview_flutter: ^4.9.0

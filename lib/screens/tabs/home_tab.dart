@@ -83,34 +83,69 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     }
   }
 
+  /// Extract tên (chữ cuối) từ full name
+  /// VD: "Nguyen Van A" → "A"
+  String _getFirstName(String? fullName) {
+    if (fullName == null || fullName.isEmpty) return 'User';
+    
+    final parts = fullName.trim().split(' ');
+    if (parts.isEmpty) return 'User';
+    
+    // Lấy chữ cuối cùng (tên)
+    return parts.last;
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     
     return Consumer3<AuthProvider, MiningProvider, WalletProvider>(
       builder: (context, authProvider, miningProvider, walletProvider, child) {
+        // Extract tên từ full name
+        final firstName = _getFirstName(authProvider.userName);
+        
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Welcome message
-              Text(
-                localizations.locale.languageCode == 'vi'
-                    ? 'Xin chào, ${authProvider.userName ?? 'User'}!'
-                    : 'Hello, ${authProvider.userName ?? 'User'}!',
-                style: GoogleFonts.roboto(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                authProvider.userEmail ?? '',
-                style: GoogleFonts.roboto(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+              // Welcome message với avatar
+              Row(
+                children: [
+                  // Avatar nhỏ
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    backgroundImage: authProvider.currentUser?.avatarUrl != null &&
+                            authProvider.currentUser!.avatarUrl!.isNotEmpty
+                        ? NetworkImage(authProvider.currentUser!.avatarUrl!)
+                        : null,
+                    child: authProvider.currentUser?.avatarUrl == null ||
+                            authProvider.currentUser!.avatarUrl!.isEmpty
+                        ? Text(
+                            firstName.substring(0, 1).toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Welcome text
+                  Text(
+                    localizations.locale.languageCode == 'vi'
+                        ? 'Xin chào, $firstName!'
+                        : 'Hello, $firstName!',
+                    style: GoogleFonts.roboto(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               
@@ -323,61 +358,6 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                 ),
               ),
               const SizedBox(height: 20),
-              
-              // Mining Stats Card
-              FutureBuilder<Map<String, dynamic>>(
-                future: miningProvider.getMiningStats(authProvider.userId ?? ''),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const SizedBox.shrink();
-                  }
-                  
-                  final stats = snapshot.data!;
-                  final totalCoins = stats['totalCoins'] as double? ?? 0.0;
-                  final totalTime = stats['totalTime'] as int? ?? 0;
-                  final totalSessions = stats['totalSessions'] as int? ?? 0;
-                  
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Mining History',
-                            style: GoogleFonts.roboto(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildHistoryItem(
-                            'Total Coins Mined',
-                            totalCoins.toStringAsFixed(8),
-                            Icons.monetization_on,
-                            Colors.orange,
-                          ),
-                          const Divider(),
-                          _buildHistoryItem(
-                            'Total Mining Time',
-                            _formatDuration(totalTime),
-                            Icons.access_time,
-                            Colors.blue,
-                          ),
-                          const Divider(),
-                          _buildHistoryItem(
-                            'Total Sessions',
-                            totalSessions.toString(),
-                            Icons.history,
-                            Colors.green,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
             ],
           ),
         );
@@ -423,57 +403,5 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildHistoryItem(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.roboto(
-                fontSize: 14,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: GoogleFonts.roboto(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDuration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    } else if (minutes > 0) {
-      return '${minutes}m';
-    } else {
-      return '${seconds}s';
-    }
-  }
 }
 
