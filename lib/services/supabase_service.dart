@@ -4,9 +4,18 @@ import '../config/supabase_config.dart';
 /// Supabase Service - Singleton để quản lý Supabase client
 class SupabaseService {
   static SupabaseClient? _client;
+  static bool _isInitializing = false;
   
   /// Initialize Supabase
   static Future<void> initialize() async {
+    // Tránh khởi tạo nhiều lần
+    if (_isInitializing || _client != null) {
+      print('[SUPABASE] ⏳ Already initializing or initialized');
+      return;
+    }
+    
+    _isInitializing = true;
+    
     try {
       print('[SUPABASE] 🚀 Initializing Supabase...');
       
@@ -21,13 +30,26 @@ class SupabaseService {
     } catch (e) {
       print('[SUPABASE] ❌ Error initializing Supabase: $e');
       rethrow;
+    } finally {
+      _isInitializing = false;
     }
   }
   
   /// Get Supabase client instance
   static SupabaseClient get client {
     if (_client == null) {
+      // Nếu chưa khởi tạo, thử khởi tạo đồng bộ
+      print('[SUPABASE] ⚠️ Client not initialized, attempting sync initialization...');
       throw Exception('Supabase not initialized. Call SupabaseService.initialize() first.');
+    }
+    return _client!;
+  }
+  
+  /// Get Supabase client instance (async version)
+  static Future<SupabaseClient> getClientAsync() async {
+    if (_client == null) {
+      print('[SUPABASE] 🔄 Client not initialized, initializing now...');
+      await initialize();
     }
     return _client!;
   }

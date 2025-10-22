@@ -7,7 +7,7 @@ import 'providers/auth_provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/mining_provider.dart';
 import 'providers/wallet_provider.dart';
-import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
 import 'utils/app_localizations.dart';
 import 'services/ads_helper.dart';
 import 'services/supabase_service.dart';
@@ -19,23 +19,24 @@ void main() async {
   // Khởi tạo Google Mobile Ads (nhanh)
   AdsHelper.initialize();
 
-  // Khởi tạo Supabase trước khi chạy app
-  await _initializeServices();
+  // Khởi tạo Supabase trong background (không block UI)
+  _initializeServicesInBackground();
 
   runApp(const MyApp());
 }
 
-Future<void> _initializeServices() async {
-  // Khởi tạo Supabase
-  try {
-    await SupabaseService.initialize();
-    print('✅ [MAIN] Supabase initialized');
-  } catch (e) {
-    print('❌ [SUPABASE ERROR] Failed to initialize: $e');
-  }
-
-  // Database sẽ tự động khởi tạo khi cần (lazy initialization)
-  // Không cần khởi tạo ở đây để tránh chậm khi mở app
+/// Khởi tạo services trong background (không block UI)
+void _initializeServicesInBackground() {
+  // Chạy trong background để không block UI
+  Future.microtask(() async {
+    try {
+      print('🚀 [MAIN] Starting background initialization...');
+      await SupabaseService.initialize();
+      print('✅ [MAIN] Background initialization completed');
+    } catch (e) {
+      print('❌ [MAIN] Background initialization failed: $e');
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -82,7 +83,7 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            home: const SplashScreen(),
+            home: const LoginScreen(),
           );
         },
       ),

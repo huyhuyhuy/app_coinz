@@ -13,8 +13,18 @@ class AuthProvider extends ChangeNotifier {
   String? _userEmail;
   String? _userName;
   String? _userPhone;
+  bool _isInitialized = false;
   bool _isLoading = false;
   UserModel? _currentUser;
+
+  bool get isInitialized => _isInitialized;
+  
+  /// Kiểm tra xem AuthProvider đã sẵn sàng chưa
+  Future<void> waitForInitialization() async {
+    while (!_isInitialized) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
 
   bool get isAuthenticated => _isAuthenticated;
   String? get userId => _userId;
@@ -25,7 +35,24 @@ class AuthProvider extends ChangeNotifier {
   UserModel? get currentUser => _currentUser;
 
   AuthProvider() {
-    _checkAuthStatus();
+    // Khởi tạo AuthProvider trong background để không block UI
+    // Nhưng vẫn check session để restore trạng thái đăng nhập
+    _initializeInBackground();
+  }
+
+  /// Khởi tạo AuthProvider trong background
+  void _initializeInBackground() {
+    Future.microtask(() async {
+      try {
+        print('[AUTH_PROVIDER] 🚀 Starting background initialization...');
+        await _checkAuthStatus();
+        _isInitialized = true;
+        print('[AUTH_PROVIDER] ✅ Background initialization completed');
+      } catch (e) {
+        print('[AUTH_PROVIDER] ❌ Background initialization failed: $e');
+        _isInitialized = true; // Vẫn đánh dấu là đã khởi tạo để tránh loop
+      }
+    });
   }
 
   /// ✅ VẤN ĐỀ 6: Load currentUser khi restore session

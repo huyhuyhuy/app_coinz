@@ -21,12 +21,47 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isInitializing = true;
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _initializeAuthProvider();
+  }
+
+  /// Khởi tạo AuthProvider trong background
+  Future<void> _initializeAuthProvider() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      // Đợi AuthProvider khởi tạo xong
+      await authProvider.waitForInitialization();
+      
+      // Kiểm tra xem user đã đăng nhập chưa
+      if (authProvider.isAuthenticated) {
+        print('[LOGIN_SCREEN] ✅ User already authenticated, navigating to MainScreen');
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (Route<dynamic> route) => false,
+          );
+          return;
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    } catch (e) {
+      print('[LOGIN_SCREEN] ❌ Failed to initialize AuthProvider: $e');
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    }
   }
 
   Future<void> _handleLogin() async {
@@ -59,6 +94,56 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     
+    // Hiển thị loading indicator khi đang khởi tạo
+    if (_isInitializing) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF2196F3),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App Logo
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  'assets/icons/app_logo.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 30),
+              // Loading indicator
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                strokeWidth: 3,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                '',
+                style: GoogleFonts.roboto(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -84,13 +169,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(25),
                     ),
-                    child: Icon(
-                      Icons.monetization_on,
-                      size: 60,
-                      color: Colors.white,
+                    child: Image.asset(
+                      'assets/icons/app_logo.png',
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
