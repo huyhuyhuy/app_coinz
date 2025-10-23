@@ -201,7 +201,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          '${walletProvider.formattedBalanceShort} COINZ',
+                          '${walletProvider.formattedBalanceShort} DFI',
                           style: GoogleFonts.roboto(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -383,7 +383,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         Text(
           value,
           style: GoogleFonts.roboto(
-            fontSize: 16,
+            fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,

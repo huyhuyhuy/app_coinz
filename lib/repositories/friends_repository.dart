@@ -18,7 +18,7 @@ class FriendInfo {
   });
 
   String get formattedBalance => wallet?.formattedBalanceShort ?? '0.00';
-  String get formattedSpeed => miningSpeed.toStringAsFixed(6);
+  String get formattedSpeed => miningSpeed.toStringAsFixed(8);
 }
 
 /// Friends Repository - Quản lý danh sách bạn bè
@@ -182,9 +182,9 @@ class FriendsRepository {
   /// Helper: Calculate speed multiplier
   /// ✅ VẤN ĐỀ 2: Cập nhật milestone mới
   double _calculateSpeedMultiplier(int totalReferrals) {
-    if (totalReferrals >= 237) return 4.0;
-    if (totalReferrals >= 158) return 3.0;
-    if (totalReferrals >= 79) return 2.0;
+    if (totalReferrals >= 100) return 4.0;
+    if (totalReferrals >= 50) return 3.0;
+    if (totalReferrals >= 20) return 2.0;
     return 1.0;
   }
 }

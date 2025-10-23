@@ -6,7 +6,7 @@
         android:maxSdkVersion="32" />
     
     <application
-        android:label="app_coinz"
+        android:label="DFI"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

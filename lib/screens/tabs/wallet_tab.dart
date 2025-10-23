@@ -88,7 +88,7 @@ class _WalletTabState extends State<WalletTab> {
                     controller: recipientController,
                     decoration: InputDecoration(
                       labelText: localizations.recipientWalletAddress,
-                      hintText: 'COINZ...',
+                      hintText: 'DFI...',
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.account_balance_wallet),
                     ),
@@ -102,7 +102,7 @@ class _WalletTabState extends State<WalletTab> {
                       hintText: '0.00',
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.monetization_on),
-                      suffixText: 'COINZ',
+                      suffixText: 'DFI',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     enabled: !showPasswordField,
@@ -281,7 +281,7 @@ class _WalletTabState extends State<WalletTab> {
                       const SizedBox(height: 12),
                       // Balance amount
                       Text(
-                        '${walletProvider.formattedBalanceShort} COINZ',
+                        '${walletProvider.formattedBalanceShort} DFI',
                         style: GoogleFonts.roboto(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -745,7 +745,7 @@ class _WalletTabState extends State<WalletTab> {
     
     switch (transaction.transactionType) {
       case 'mining':
-        return isVi ? 'Phần thưởng đào coin' : 'Mining Reward';
+        return isVi ? 'Phần thưởng khai thác' : 'Mining Reward';
       
       case 'referral':
         return isVi ? 'Thưởng giới thiệu bạn bè' : 'Referral Bonus';

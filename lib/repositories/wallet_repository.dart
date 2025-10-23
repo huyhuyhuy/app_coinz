@@ -263,7 +263,7 @@ class WalletRepository {
       print('[WALLET_REPO] 💸 Starting internal transfer...');
       print('[WALLET_REPO] From User ID: $fromUserId');
       print('[WALLET_REPO] To Wallet: $toWalletAddress');
-      print('[WALLET_REPO] Amount: $amount COINZ');
+      print('[WALLET_REPO] Amount: $amount DFI');
 
       // ========== STEP 1: Validate sender ==========
       final senderWallet = await getLocalWallet(fromUserId);
@@ -397,7 +397,7 @@ class WalletRepository {
       print('[WALLET_REPO] Summary:');
       print('[WALLET_REPO]   - Sender: ${fromUserId}');
       print('[WALLET_REPO]   - Recipient: ${recipientWallet.userId}');
-      print('[WALLET_REPO]   - Amount: $amount COINZ');
+      print('[WALLET_REPO]   - Amount: $amount DFI');
       print('[WALLET_REPO]   - Sender new balance: $senderBalanceAfter');
       print('[WALLET_REPO]   - Recipient new balance: $recipientBalanceAfter');
       
@@ -416,7 +416,7 @@ class WalletRepository {
   /// Generate wallet address
   String _generateWalletAddress() {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return 'COINZ${timestamp}${(timestamp % 1000).toString().padLeft(3, '0')}';
+    return 'DFI${timestamp}${(timestamp % 1000).toString().padLeft(3, '0')}';
   }
 }
 

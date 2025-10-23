@@ -24,7 +24,7 @@ class MiningSessionModel {
     this.endTime,
     this.durationSeconds = 0,
     this.coinsMined = 0.0,
-    this.baseMiningSpeed = 0.001,
+    this.baseMiningSpeed = 0.00000079,
     this.actualMiningSpeed = 0.0,
     this.speedMultiplier = 1.0,
     this.isActive = true,
@@ -45,7 +45,7 @@ class MiningSessionModel {
           : null,
       durationSeconds: map['duration_seconds'] as int? ?? 0,
       coinsMined: (map['coins_mined'] as num?)?.toDouble() ?? 0.0,
-      baseMiningSpeed: (map['base_mining_speed'] as num?)?.toDouble() ?? 0.001,
+      baseMiningSpeed: (map['base_mining_speed'] as num?)?.toDouble() ?? 0.00000079,
       actualMiningSpeed: (map['actual_mining_speed'] as num?)?.toDouble() ?? 0.0,
       speedMultiplier: (map['speed_multiplier'] as num?)?.toDouble() ?? 1.0,
       isActive: (map['is_active'] as int) == 1,
@@ -86,7 +86,7 @@ class MiningSessionModel {
           : null,
       durationSeconds: json['duration_seconds'] as int? ?? 0,
       coinsMined: (json['coins_mined'] as num?)?.toDouble() ?? 0.0,
-      baseMiningSpeed: (json['base_mining_speed'] as num?)?.toDouble() ?? 0.001,
+      baseMiningSpeed: (json['base_mining_speed'] as num?)?.toDouble() ?? 0.00000079,
       actualMiningSpeed: (json['actual_mining_speed'] as num?)?.toDouble() ?? 0.0,
       speedMultiplier: (json['speed_multiplier'] as num?)?.toDouble() ?? 1.0,
       isActive: json['is_active'] as bool? ?? true,
@@ -173,7 +173,7 @@ class MiningSessionModel {
   String get formattedCoinsMined => currentCoinsMined.toStringAsFixed(8);
 
   /// Format mining speed
-  String get formattedMiningSpeed => actualMiningSpeed.toStringAsFixed(6);
+  String get formattedMiningSpeed => actualMiningSpeed.toStringAsFixed(8);
 
   @override
   String toString() {

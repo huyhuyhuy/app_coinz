@@ -323,7 +323,7 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('🎉 Nhận thưởng thành công! +${video.rewardAmount.toStringAsFixed(8)} COINZ'),
+            content: Text('🎉 Nhận thưởng thành công! +${video.rewardAmount.toStringAsFixed(8)} DFI'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),

@@ -137,8 +137,8 @@ class MiningRepository {
         sessionId: _generateUuid(),
         userId: userId,
         startTime: DateTime.now(),
-        baseMiningSpeed: 0.001, // 0.001 coins per second
-        actualMiningSpeed: 0.001 * speedMultiplier,
+        baseMiningSpeed: 0.00000079, // 0.00000079 DFI per second
+        actualMiningSpeed: 0.00000079 * speedMultiplier,
         speedMultiplier: speedMultiplier,
         createdAt: DateTime.now(),
       );
@@ -212,7 +212,7 @@ class MiningRepository {
         );
         
         await _transactionRepo.createTransaction(transaction);
-        print('[MINING_REPO] ✅ Mining transaction created: $coinsMined COINZ');
+        print('[MINING_REPO] ✅ Mining transaction created: $coinsMined DFI');
       }
       
       // Update server (async, don't wait)

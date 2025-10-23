@@ -177,16 +177,16 @@ class AppLocalizations {
   String get coinsMined {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Coin đã đào';
+        return 'Đã khai thác';
       default:
-        return 'Coins Mined';
+        return 'Mined';
     }
   }
 
   String get miningSpeed {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Tốc độ đào';
+        return 'Tốc độ khai thác';
       default:
         return 'Mining Speed';
     }
@@ -233,16 +233,16 @@ class AppLocalizations {
   String get welcomeMessage {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Chào mừng đến với App Coinz!';
+        return 'Chào mừng đến với DFI!';
       default:
-        return 'Welcome to App Coinz!';
+        return 'Welcome to DFI!';
     }
   }
 
   String get startMining {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Bắt đầu đào coin';
+        return 'Bắt đầu khai thác';
       default:
         return 'Start Mining';
     }
@@ -251,7 +251,7 @@ class AppLocalizations {
   String get stopMining {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Dừng đào';
+        return 'Dừng khai thác';
       default:
         return 'Stop Mining';
     }
@@ -287,7 +287,7 @@ class AppLocalizations {
   String get miningHistory {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Lịch sử đào';
+        return 'Lịch sử khai thác';
       default:
         return 'Mining History';
     }
@@ -314,16 +314,16 @@ class AppLocalizations {
   String get totalCoinsMined {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Tổng coin đã đào';
+        return 'Tổng DFI đã khai thác';
       default:
-        return 'Total Coins Mined';
+        return 'Total DFI Mined';
     }
   }
 
   String get totalMiningTime {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Tổng thời gian đào';
+        return 'Tổng thời gian khai thác';
       default:
         return 'Total Mining Time';
     }
@@ -467,7 +467,7 @@ class AppLocalizations {
   String get pleaseLoginToStartMining {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Vui lòng đăng nhập để bắt đầu đào';
+        return 'Vui lòng đăng nhập để bắt đầu khai thác';
       default:
         return 'Please login to start mining';
     }
@@ -476,7 +476,7 @@ class AppLocalizations {
   String get miningActive {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Đang đào';
+        return 'Đang khai thác';
       default:
         return 'Mining Active';
     }
@@ -530,7 +530,7 @@ class AppLocalizations {
   String get miningTips {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Mẹo đào coin';
+        return 'Mẹo khai thác';
       default:
         return 'Mining Tips';
     }
@@ -539,16 +539,16 @@ class AppLocalizations {
   String get miningTip1 {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Đào coin mỗi ngày để tăng tốc độ đào';
+        return 'Khai thác mỗi ngày để thu thập nhiều DFI';
       default:
-        return 'Mine daily to increase your mining speed';
+        return 'Mine daily to increase your DFI';
     }
   }
 
   String get miningTip2 {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Mời bạn bè để tăng tốc độ đào';
+        return 'Mời bạn bè để tăng tốc độ khai thác';
       default:
         return 'Invite friends to boost mining speed';
     }

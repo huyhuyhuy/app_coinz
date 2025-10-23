@@ -97,7 +97,7 @@ class VideoAdRepository {
         
         // Add coins to wallet
         await _walletRepo.addCoins(userId, rewardAmount);
-        print('[VIDEO_AD_REPO] ✅ Reward added to wallet: $rewardAmount COINZ');
+        print('[VIDEO_AD_REPO] ✅ Reward added to wallet: $rewardAmount DFI');
         
         // ✅ Tạo transaction record cho video reward
         final now = DateTime.now();

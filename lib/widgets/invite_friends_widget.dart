@@ -31,16 +31,16 @@ class _InviteFriendsWidgetState extends State<InviteFriendsWidget> {
 
   /// ✅ VẤN ĐỀ 2: Cập nhật milestone mới
   String _getSpeedBonus(int referrals) {
-    if (referrals >= 237) return 'x4';
-    if (referrals >= 158) return 'x3';
-    if (referrals >= 79) return 'x2';
+    if (referrals >= 100) return 'x4';
+    if (referrals >= 50) return 'x3';
+    if (referrals >= 20) return 'x2';
     return 'x1';
   }
 
   Color _getBonusColor(int referrals) {
-    if (referrals >= 237) return Colors.purple;
-    if (referrals >= 158) return Colors.orange;
-    if (referrals >= 79) return Colors.green;
+    if (referrals >= 100) return Colors.purple;
+    if (referrals >= 50) return Colors.orange;
+    if (referrals >= 20) return Colors.green;
     return Colors.grey;
   }
 
@@ -94,7 +94,7 @@ class _InviteFriendsWidgetState extends State<InviteFriendsWidget> {
             Expanded(
               child: Text(
                 localizations.locale.languageCode == 'vi'
-                    ? 'Mời bạn bè để tăng tốc độ đào'
+                    ? 'Mời bạn bè để tăng tốc độ khai thác'
                     : 'Invite friends to boost mining speed',
                 style: GoogleFonts.roboto(
                   fontSize: 16,
@@ -304,8 +304,8 @@ class _InviteFriendsWidgetState extends State<InviteFriendsWidget> {
                   onPressed: () {
                     // TODO: Implement share functionality
                     final message = localizations.locale.languageCode == 'vi'
-                        ? 'Tham gia App Coinz và đào coin miễn phí! Sử dụng mã giới thiệu: $referralCode'
-                        : 'Join App Coinz and mine coins for free! Use referral code: $referralCode';
+                        ? 'Tham gia DFI và khai thác miễn phí! Sử dụng mã giới thiệu: $referralCode'
+                        : 'Join DFI and mine for free! Use referral code: $referralCode';
                     
                     Clipboard.setData(ClipboardData(text: message));
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -389,9 +389,9 @@ class _InviteFriendsWidgetState extends State<InviteFriendsWidget> {
   /// ✅ VẤN ĐỀ 2: Cập nhật milestone mới
   Widget _buildMilestones(BuildContext context, int currentReferrals) {
     final milestones = [
-      {'count': 79, 'bonus': 'x2', 'color': Colors.green},
-      {'count': 158, 'bonus': 'x3', 'color': Colors.orange},
-      {'count': 237, 'bonus': 'x4', 'color': Colors.purple},
+      {'count': 20, 'bonus': 'x2', 'color': Colors.green},
+      {'count': 50, 'bonus': 'x3', 'color': Colors.orange},
+      {'count': 100, 'bonus': 'x4', 'color': Colors.purple},
     ];
 
     return Column(
