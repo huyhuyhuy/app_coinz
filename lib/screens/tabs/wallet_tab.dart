@@ -90,7 +90,7 @@ class _WalletTabState extends State<WalletTab> {
                       labelText: localizations.recipientWalletAddress,
                       hintText: 'DFI...',
                       border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.account_balance_wallet),
+                      // prefixIcon: const Icon(Icons.account_balance_wallet), // bỏ icon này đi
                     ),
                     enabled: !showPasswordField,
                   ),
@@ -101,7 +101,7 @@ class _WalletTabState extends State<WalletTab> {
                       labelText: localizations.amount,
                       hintText: '0.00',
                       border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.monetization_on),
+                      // prefixIcon: const Icon(Icons.monetization_on), // bỏ icon này đi
                       suffixText: 'DFI',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),

@@ -61,6 +61,7 @@ class MyApp extends StatelessWidget {
                 seedColor: const Color(0xFF2196F3),
                 brightness: Brightness.light,
               ),
+              scaffoldBackgroundColor: const Color(0xFFFFFFE0), // ✅ Màu nền vàng nhạt #FFFFE0
               useMaterial3: true,
               textTheme: GoogleFonts.robotoTextTheme(),
             ),

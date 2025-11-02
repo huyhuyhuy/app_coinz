@@ -92,8 +92,20 @@ class _MainScreenState extends State<MainScreen> {
             label: localizations.home,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.monetization_on_outlined),
-            activeIcon: const Icon(Icons.monetization_on),
+            icon: Image.asset(
+              'assets/icons/task_tab_icon.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+              // ✅ BỎ color để hiển thị icon gốc (màu vàng)
+            ),
+            activeIcon: Image.asset(
+              'assets/icons/task_tab_icon.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+              // ✅ BỎ color để hiển thị icon gốc (màu vàng)
+            ),
             label: localizations.task,
           ),
           BottomNavigationBarItem(

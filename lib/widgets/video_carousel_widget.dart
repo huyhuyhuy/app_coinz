@@ -71,12 +71,34 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
           _isLoadingVideos = false;
         });
 
+        // ✅ Check userId để xem videos nào đã claimed
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final userId = authProvider.userId;
+
         // Initialize cho tất cả videos
         for (int i = 0; i < videos.length; i++) {
           _initializeVideoController(i, videos[i].videoUrl);
           _watchSeconds[i] = 0;
-          _videoClaimed[i] = false;
           _isClaimingReward[i] = false;
+          
+          // ✅ Check xem video này đã xem trong ngày chưa
+          if (userId != null) {
+            final hasViewed = await _videoAdRepo.hasUserViewedToday(
+              userId,
+              videos[i].adId,
+            );
+            _videoClaimed[i] = hasViewed;
+            if (hasViewed) {
+              print('[VIDEO_CAROUSEL] ✅ Video $i đã được xem hôm nay');
+            }
+          } else {
+            _videoClaimed[i] = false;
+          }
+        }
+        
+        // ✅ Update UI sau khi check xong
+        if (mounted) {
+          setState(() {});
         }
       } else {
         print('[VIDEO_CAROUSEL] ⚠️ No active videos available');
@@ -551,21 +573,18 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
       );
     }
 
+    // ✅ Luôn lấy data để hiển thị bố cục cố định
+    final currentVideo = _videos[_currentVideoIndex];
+    final watchTime = _watchSeconds[_currentVideoIndex] ?? 0;
+    final progress = watchTime / _requiredWatchSeconds;
+    final remainingSeconds = _requiredWatchSeconds - watchTime;
+    
     // ✅ Check if controller is ready (YouTube or MP4)
     final videoType = _videoTypes[_currentVideoIndex];
     final isControllerReady = videoType == VideoType.youtube
         ? _youtubeControllers[_currentVideoIndex] != null
         : (_mp4Controllers[_currentVideoIndex] != null && 
            _mp4Controllers[_currentVideoIndex]!.value.isInitialized);
-    
-    if (!isControllerReady) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final currentVideo = _videos[_currentVideoIndex];
-    final watchTime = _watchSeconds[_currentVideoIndex] ?? 0;
-    final progress = watchTime / _requiredWatchSeconds;
-    final remainingSeconds = _requiredWatchSeconds - watchTime;
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -584,16 +603,23 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
         children: [
           // Video Player
           Container(
-            height: 240,
+            height: 220, // ✅ Giảm từ 240 → 220 để bỏ khoảng trắng thừa
             decoration: const BoxDecoration(
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Stack(
               children: [
-                // ✅ Hiển thị YouTube Player hoặc MP4 Player tùy theo video type
+                // ✅ Hiển thị video player hoặc loading placeholder
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: _buildVideoPlayerWidget(),
+                  child: isControllerReady
+                      ? _buildVideoPlayerWidget()
+                      : Container(
+                          color: Colors.black87,
+                          child: const Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          ),
+                        ),
                 ),
               
               // Countdown indicator - CHỈ hiển thị khi chưa đủ 30 giây
@@ -640,7 +666,7 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
 
           // Info section - Nằm liền mạch bên dưới video
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16), // ✅ Thu gọn padding vertical
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Colors.blue.shade50, Colors.purple.shade50],
@@ -654,38 +680,32 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // Reward
-                    Row(
-                      children: [
-                        Text(
-                          currentVideo.rewardAmount.toStringAsFixed(3),
-                          style: GoogleFonts.roboto(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade700,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.monetization_on, size: 20, color: Colors.orange),
-                      ],
+                    // Reward (thu gọn)
+                    Text(
+                      '${currentVideo.rewardAmount.toStringAsFixed(3)} DFI',
+                      style: GoogleFonts.roboto(
+                        fontSize: 16, // ✅ Giảm từ 18 → 16
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange.shade700,
+                      ),
                     ),
 
-                    // Divider
+                    // Divider (thu gọn)
                     Container(
                       width: 1,
-                      height: 24,
+                      height: 20, // ✅ Giảm từ 24 → 20
                       color: Colors.grey.shade300,
                     ),
 
-                    // Views
+                    // Views (thu gọn)
                     Row(
                       children: [
-                        const Icon(Icons.visibility, size: 16, color: Colors.grey),
+                        const Icon(Icons.visibility, size: 14, color: Colors.grey), // ✅ Giảm từ 16 → 14
                         const SizedBox(width: 4),
                         Text(
                           '${currentVideo.totalViews}',
                           style: GoogleFonts.roboto(
-                            fontSize: 14,
+                            fontSize: 13, // ✅ Giảm từ 14 → 13
                             fontWeight: FontWeight.w600,
                             color: Colors.grey[700],
                           ),
@@ -693,30 +713,22 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
                       ],
                     ),
 
-                    // Claimed badge (nếu có)
+                    // Claimed badge (nếu có) - Đơn giản, không có khung
                     if (_videoClaimed[_currentVideoIndex] == true)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.green.shade300),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.green.shade700, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Đã nhận',
-                              style: GoogleFonts.roboto(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.green.shade700,
-                              ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green.shade700, size: 16), // ✅ Tăng size 14→16
+                          const SizedBox(width: 4),
+                          Text(
+                            'Đã nhận',
+                            style: GoogleFonts.roboto(
+                              fontSize: 13, // ✅ Tăng size 11→13 để rõ hơn
+                              fontWeight: FontWeight.w600,
+                              color: Colors.green.shade700,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                   ],
                 ),
@@ -727,7 +739,7 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
           // Navigation section - Nằm dưới cùng card
           if (_videos.length > 1)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16), // ✅ Thu gọn padding vertical
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
                 borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
@@ -738,14 +750,16 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Previous button - Chỉ icon
+                  // Previous button - Chỉ icon (thu gọn)
                   IconButton(
+                    padding: EdgeInsets.zero, // ✅ Bỏ padding mặc định
+                    constraints: const BoxConstraints(), // ✅ Bỏ constraint mặc định
                     onPressed: _currentVideoIndex > 0 
                         ? () => _changeVideo(_currentVideoIndex - 1)
                         : null,
                     icon: Icon(
                       Icons.chevron_left,
-                      size: 32,
+                      size: 28, // ✅ Giảm từ 32 → 28
                       color: _currentVideoIndex > 0 
                           ? Theme.of(context).colorScheme.primary
                           : Colors.grey.shade300,
@@ -753,12 +767,12 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
                     tooltip: 'Video trước',
                   ),
 
-                  // Page indicator
+                  // Page indicator (thu gọn)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), // ✅ Giảm padding
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                       ),
@@ -766,21 +780,23 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
                     child: Text(
                       '${_currentVideoIndex + 1}/${_videos.length}',
                       style: GoogleFonts.roboto(
-                        fontSize: 14,
+                        fontSize: 13, // ✅ Giảm từ 14 → 13
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
 
-                  // Next button - Chỉ icon
+                  // Next button - Chỉ icon (thu gọn)
                   IconButton(
+                    padding: EdgeInsets.zero, // ✅ Bỏ padding mặc định
+                    constraints: const BoxConstraints(), // ✅ Bỏ constraint mặc định
                     onPressed: _currentVideoIndex < _videos.length - 1
                         ? () => _changeVideo(_currentVideoIndex + 1)
                         : null,
                     icon: Icon(
                       Icons.chevron_right,
-                      size: 32,
+                      size: 28, // ✅ Giảm từ 32 → 28
                       color: _currentVideoIndex < _videos.length - 1
                           ? Theme.of(context).colorScheme.primary
                           : Colors.grey.shade300,

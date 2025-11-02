@@ -137,8 +137,8 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                   // Welcome text
                   Text(
                     localizations.locale.languageCode == 'vi'
-                        ? 'Xin chào, $firstName!'
-                        : 'Hello, $firstName!',
+                        ? '$firstName'
+                        : '$firstName',
                     style: GoogleFonts.roboto(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -282,7 +282,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                           Expanded(
                             child: _buildStatItem(
                               context,
-                              Icons.monetization_on,
+                              'assets/icons/mined_icon.png', // ✅ Dùng PNG icon
                               miningProvider.formattedCoins,
                               localizations.coinsMined,
                               Colors.orange,
@@ -367,18 +367,26 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
 
   Widget _buildStatItem(
     BuildContext context,
-    IconData icon,
+    dynamic icon, // ✅ Hỗ trợ cả IconData và String (asset path)
     String value,
     String label,
     Color color,
   ) {
     return Column(
       children: [
-        Icon(
-          icon,
-          size: 32,
-          color: color,
-        ),
+        // ✅ Hiển thị icon phù hợp: Material Icon hoặc PNG Asset
+        icon is IconData
+            ? Icon(
+                icon,
+                size: 32,
+                color: color,
+              )
+            : Image.asset(
+                icon as String,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+              ),
         const SizedBox(height: 8),
         Text(
           value,
