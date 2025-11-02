@@ -9,11 +9,11 @@ import '../../utils/app_localizations.dart';
 import '../../repositories/transaction_repository.dart';
 import '../../models/models.dart';
 
-/// Filter type cho transactions
-enum TransactionFilter {
-  all,      // Tất cả
-  incoming, // Chỉ giao dịch đến (+)
-  outgoing, // Chỉ giao dịch đi (-)
+/// Category cho transactions
+enum TransactionCategory {
+  all,      // Tất cả loại
+  transfer, // Chỉ chuyển/nhận nội bộ (transfer_send, transfer_receive, withdrawal)
+  earnings, // Chỉ thu nhập (mining, video_reward, referral)
 }
 
 class WalletTab extends StatefulWidget {
@@ -25,7 +25,9 @@ class WalletTab extends StatefulWidget {
 
 class _WalletTabState extends State<WalletTab> {
   bool _isInitialized = false;
-  TransactionFilter _currentFilter = TransactionFilter.all;
+  // ✅ Category Filtering
+  TransactionCategory _currentCategory = TransactionCategory.all;
+  bool _isHistoryExpanded = false; // ✅ State để collapse/expand lịch sử giao dịch
   final TransactionRepository _transactionRepo = TransactionRepository();
 
   @override
@@ -378,120 +380,124 @@ class _WalletTabState extends State<WalletTab> {
               
               const SizedBox(height: 24),
 
-              // Transaction History Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    localizations.locale.languageCode == 'vi'
-                        ? 'Lịch sử giao dịch'
-                        : 'Transaction History',
-                    style: GoogleFonts.roboto(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  // Filter chips
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+              // Transaction History Section - Clickable to expand/collapse
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isHistoryExpanded = !_isHistoryExpanded; // ✅ Toggle expand/collapse
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildFilterChip(
-                        TransactionFilter.all,
-                        '',
-                        icon: Icons.format_list_bulleted,
+                      // Title + Icon mũi tên
+                      Row(
+                        children: [
+                          Text(
+                            localizations.locale.languageCode == 'vi'
+                                ? 'Lịch sử giao dịch'
+                                : 'Transaction History',
+                            style: GoogleFonts.roboto(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // ✅ Icon mũi tên xuống/lên
+                          Icon(
+                            _isHistoryExpanded 
+                                ? Icons.expand_less 
+                                : Icons.expand_more,
+                            size: 28,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(
-                        TransactionFilter.incoming,
-                        '',
-                        icon: Icons.keyboard_arrow_down,
-                        iconColor: Colors.green,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildFilterChip(
-                        TransactionFilter.outgoing,
-                        '',
-                        icon: Icons.keyboard_arrow_up,
-                        iconColor: Colors.red,
-                      ),
+                      // ✅ Filter chip: CHỈ hiển thị khi expanded
+                      if (_isHistoryExpanded)
+                        _buildCategoryChip(),
                     ],
                   ),
-                ],
+                ),
               ),
 
               const SizedBox(height: 12),
 
-              // Transactions List
-              FutureBuilder<List<TransactionModel>>(
-                future: _loadTransactions(authProvider.userId ?? ''),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32.0),
-                        child: Text(
-                          'Error: ${snapshot.error}',
-                          style: GoogleFonts.roboto(color: Colors.red),
+              // ✅ Transactions List - Chỉ hiển thị khi expanded
+              if (_isHistoryExpanded)
+                FutureBuilder<List<TransactionModel>>(
+                  future: _loadTransactions(authProvider.userId ?? ''),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
                         ),
-                      ),
-                    );
-                  }
+                      );
+                    }
 
-                  final allTransactions = snapshot.data ?? [];
-                  
-                  // ✅ Remove duplicate transactions (same description + amount + time)
-                  final deduplicatedTransactions = _removeDuplicateTransactions(allTransactions);
-                  
-                  // Filter transactions theo _currentFilter
-                  final filteredTransactions = _filterTransactions(deduplicatedTransactions);
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Text(
+                            'Error: ${snapshot.error}',
+                            style: GoogleFonts.roboto(color: Colors.red),
+                          ),
+                        ),
+                      );
+                    }
 
-                  if (filteredTransactions.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(48.0),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.receipt_long,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              localizations.locale.languageCode == 'vi'
-                                  ? 'Chưa có giao dịch'
-                                  : 'No transactions yet',
-                              style: GoogleFonts.roboto(
-                                fontSize: 16,
-                                color: Colors.grey[600],
+                    final allTransactions = snapshot.data ?? [];
+                    
+                    // ✅ Remove duplicate transactions (same description + amount + time)
+                    final deduplicatedTransactions = _removeDuplicateTransactions(allTransactions);
+                    
+                    // Filter transactions theo _currentFilter
+                    final filteredTransactions = _filterTransactions(deduplicatedTransactions);
+
+                    if (filteredTransactions.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(48.0),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.receipt_long,
+                                size: 64,
+                                color: Colors.grey[400],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 16),
+                              Text(
+                                localizations.locale.languageCode == 'vi'
+                                    ? 'Chưa có giao dịch'
+                                    : 'No transactions yet',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  }
+                      );
+                    }
 
-                  return Column(
-                    children: filteredTransactions
-                        .map((transaction) => _buildTransactionCard(
-                              context,
-                              transaction,
-                              localizations,
-                            ))
-                        .toList(),
-                  );
-                },
-              ),
+                    return Column(
+                      children: filteredTransactions
+                          .map((transaction) => _buildTransactionCard(
+                                context,
+                                transaction,
+                                localizations,
+                              ))
+                          .toList(),
+                    );
+                  },
+                ),
 
               const SizedBox(height: 20),
             ],
@@ -552,19 +558,37 @@ class _WalletTabState extends State<WalletTab> {
     return deduplicatedList;
   }
 
-  /// Filter transactions theo loại
+  /// ✅ Filter transactions theo CATEGORY only
   List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
-    switch (_currentFilter) {
-      case TransactionFilter.all:
-        return transactions;
+    // Filter by CATEGORY
+    if (_currentCategory == TransactionCategory.all) {
+      return transactions;
+    }
+    
+    return transactions.where((t) => _belongsToCategory(t, _currentCategory)).toList();
+  }
+  
+  /// ✅ Check xem transaction có thuộc category không
+  bool _belongsToCategory(TransactionModel transaction, TransactionCategory category) {
+    switch (category) {
+      case TransactionCategory.all:
+        return true;
       
-      case TransactionFilter.incoming:
-        // Giao dịch làm TĂNG số dư (+)
-        return transactions.where((t) => _isIncomingTransaction(t)).toList();
+      case TransactionCategory.transfer:
+        // Transfer: chuyển/nhận nội bộ + rút tiền
+        return [
+          'transfer_send',
+          'transfer_receive',
+          'withdrawal',
+        ].contains(transaction.transactionType);
       
-      case TransactionFilter.outgoing:
-        // Giao dịch làm GIẢM số dư (-)
-        return transactions.where((t) => !_isIncomingTransaction(t)).toList();
+      case TransactionCategory.earnings:
+        // Earnings: thu nhập từ hoạt động
+        return [
+          'mining',
+          'video_reward',
+          'referral',
+        ].contains(transaction.transactionType);
     }
   }
 
@@ -581,59 +605,53 @@ class _WalletTabState extends State<WalletTab> {
     return incomingTypes.contains(transaction.transactionType);
   }
 
-  /// Build filter chip button
-  Widget _buildFilterChip(TransactionFilter filter, String label, {IconData? icon, Color? iconColor}) {
-    final isSelected = _currentFilter == filter;
-    
-    Color getColor() {
-      if (filter == TransactionFilter.incoming) return Colors.green;
-      if (filter == TransactionFilter.outgoing) return Colors.red;
-      return Theme.of(context).colorScheme.primary;
+  /// ✅ Build category chip (cycle: All → Transfer → Earnings → All)
+  Widget _buildCategoryChip() {
+    IconData getIcon() {
+      switch (_currentCategory) {
+        case TransactionCategory.all:
+          return Icons.filter_list; // Icon mới cho All
+        case TransactionCategory.transfer:
+          return Icons.swap_horiz; // Icon cho Transfer
+        case TransactionCategory.earnings:
+          return Icons.trending_up; // Icon cho Earnings
+      }
     }
     
-    Color getIconColor() {
-      if (isSelected) return Colors.white;
-      if (iconColor != null) return iconColor;
-      return Colors.grey.shade700;
-    }
+    final isActive = _currentCategory != TransactionCategory.all;
+    final color = Theme.of(context).colorScheme.primary;
     
     return InkWell(
       onTap: () {
         setState(() {
-          _currentFilter = filter;
+          // ✅ Cycle qua 3 categories
+          switch (_currentCategory) {
+            case TransactionCategory.all:
+              _currentCategory = TransactionCategory.transfer;
+              break;
+            case TransactionCategory.transfer:
+              _currentCategory = TransactionCategory.earnings;
+              break;
+            case TransactionCategory.earnings:
+              _currentCategory = TransactionCategory.all;
+              break;
+          }
         });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? getColor() : Colors.grey.shade200,
+          color: isActive ? color : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? getColor() : Colors.grey.shade300,
+            color: isActive ? color : Colors.grey.shade300,
             width: 1.5,
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 16,
-                color: getIconColor(),
-              ),
-              if (label.isNotEmpty) const SizedBox(width: 4),
-            ],
-            if (label.isNotEmpty)
-              Text(
-                label,
-                style: GoogleFonts.roboto(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? Colors.white : Colors.grey.shade700,
-                ),
-              ),
-          ],
+        child: Icon(
+          getIcon(),
+          size: 16,
+          color: isActive ? Colors.white : Colors.grey.shade700,
         ),
       ),
     );
