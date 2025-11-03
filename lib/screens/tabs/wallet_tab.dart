@@ -435,7 +435,9 @@ class _WalletTabState extends State<WalletTab> {
                       return const Center(
                         child: Padding(
                           padding: EdgeInsets.all(32.0),
-                          child: CircularProgressIndicator(),
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+                          ),
                         ),
                       );
                     }

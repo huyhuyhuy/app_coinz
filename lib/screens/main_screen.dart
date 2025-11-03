@@ -171,7 +171,11 @@ class _FriendsTabState extends State<FriendsTab> {
           future: _loadFriendsData(authProvider.userId!),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+                ),
+              );
             }
 
             if (snapshot.hasError) {

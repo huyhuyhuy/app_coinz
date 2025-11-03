@@ -7,7 +7,7 @@ import 'providers/auth_provider.dart';
 import 'providers/language_provider.dart';
 import 'providers/mining_provider.dart';
 import 'providers/wallet_provider.dart';
-import 'screens/login_screen.dart';
+import 'screens/app_init_screen.dart';
 import 'utils/app_localizations.dart';
 import 'services/ads_helper.dart';
 import 'services/supabase_service.dart';
@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            home: const LoginScreen(),
+            home: const AppInitScreen(), // ✅ App Init Screen (Splash + App Open Ad)
           );
         },
       ),

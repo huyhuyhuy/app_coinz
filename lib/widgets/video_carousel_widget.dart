@@ -422,7 +422,11 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     if (videoType == VideoType.youtube) {
       final controller = _youtubeControllers[_currentVideoIndex];
       if (controller == null) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+          ),
+        );
       }
       
       return YoutubePlayer(
@@ -437,7 +441,11 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     } else {
       final controller = _mp4Controllers[_currentVideoIndex];
       if (controller == null || !controller.value.isInitialized) {
-        return const Center(child: CircularProgressIndicator());
+        return const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+          ),
+        );
       }
       
       return AspectRatio(
@@ -524,7 +532,9 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
         ),
         child: Column(
           children: [
-            const CircularProgressIndicator(),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+            ),
             const SizedBox(height: 16),
             Text(
               'Đang tải videos...',
