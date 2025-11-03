@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 
 class AdsHelper {
   static String get bannerAdUnitId {
-    // Test ad unit ID - thay thế bằng ID thật khi publish
-    return 'ca-app-pub-3940256099942544/6300978111';
+    // Production Banner Ad Unit ID
+    return 'ca-app-pub-4969810842586372/8184179176';
   }
 
   static String get interstitialAdUnitId {

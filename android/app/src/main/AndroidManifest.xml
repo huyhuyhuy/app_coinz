@@ -37,10 +37,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
         
-        <!-- Google Mobile Ads App ID -->
+        <!-- Google Mobile Ads App ID - Production -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-4969810842586372~7884796278" />
         
         <!-- ✅ UCrop Activity - Required for image_cropper -->
         <activity

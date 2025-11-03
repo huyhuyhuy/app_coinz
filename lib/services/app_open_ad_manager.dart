@@ -12,10 +12,10 @@ class AppOpenAdManager {
   static bool _isShowingAd = false;
   static bool _isAdLoaded = false;
   
-  // ✅ Test Ad Unit ID cho App Open Ads
+  // ✅ Production Ad Unit ID cho App Open Ads
   static String get appOpenAdUnitId {
-    // Test ad unit ID - Google AdMob Test ID
-    return 'ca-app-pub-3940256099942544/9257395921';
+    // Production ad unit ID
+    return 'ca-app-pub-4969810842586372/8233130697';
   }
   
   // ✅ Frequency: 4 giờ

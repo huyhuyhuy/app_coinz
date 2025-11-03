@@ -1,10 +1,11 @@
 app open ad
 ca-app-pub-4969810842586372/8233130697
 
-
 banner ad:
 ca-app-pub-4969810842586372/8184179176
 
+ID app:
+ca-app-pub-4969810842586372~7884796278
 
 # App Open Ads - Hướng dẫn sử dụng
 

@@ -1,11 +1,5 @@
 -- ========================================
--- SUPABASE STORAGE: AVATARS BUCKET SETUP
--- ========================================
--- Script này sẽ tạo bucket 'avatars' với cấu hình public
--- và policies cho phép tất cả operations
-
--- ========================================
--- 1. TẠO BUCKET 'avatars'
+-- AVATARS BUCKET SETUP
 -- ========================================
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (

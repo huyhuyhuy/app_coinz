@@ -1,16 +1,6 @@
 -- ==========================================
 -- Supabase Storage Setup for Video Ads
 -- ==========================================
--- Mục đích: Tạo bucket "video_ads" để lưu trữ video quảng cáo
--- Public access: Cho phép mọi người xem, thêm, sửa, xóa video
--- File restrictions: Chỉ cho phép video files, max 100MB
--- ==========================================
-
--- ==========================================
--- BƯỚC 1: Tạo Storage Bucket
--- ==========================================
--- Vào Supabase Dashboard → Storage → Create new bucket
--- Hoặc chạy SQL sau:
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
