@@ -6,7 +6,7 @@
         android:maxSdkVersion="32" />
     
     <application
-        android:label="DFI"
+        android:label="DongFi"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
