@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -274,6 +275,48 @@ class _FriendsTabState extends State<FriendsTab> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  // ✅ Hàng "Mời thêm bạn bè" - nhỏ gọn
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, child) {
+                      return InkWell(
+                        onTap: () => _showReferralCodeDialog(context, authProvider.currentUser?.referralCode ?? ''),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.green.shade200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.person_add,
+                                size: 16,
+                                color: Colors.green.shade700,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                localizations.locale.languageCode == 'vi'
+                                    ? 'Mời thêm bạn bè'
+                                    : 'Invite more friends',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 12),
 
                   if (referrals.isEmpty)
@@ -413,6 +456,120 @@ class _FriendsTabState extends State<FriendsTab> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// ✅ Show referral code dialog
+  void _showReferralCodeDialog(BuildContext context, String referralCode) {
+    final localizations = AppLocalizations.of(context);
+    final isVi = localizations.locale.languageCode == 'vi';
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              Text(
+                isVi ? 'Mã mời của bạn' : 'Your Referral Code',
+                style: GoogleFonts.roboto(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Referral Code Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.shade300,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        referralCode.isEmpty ? 'N/A' : referralCode,
+                        style: GoogleFonts.roboto(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Copy Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (referralCode.isNotEmpty) {
+                      Clipboard.setData(ClipboardData(text: referralCode));
+                      Navigator.pop(dialogContext);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isVi ? 'Đã sao chép mã mời' : 'Referral code copied',
+                          ),
+                          duration: const Duration(seconds: 2),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.copy, size: 20),
+                  label: Text(
+                    isVi ? 'Sao chép' : 'Copy',
+                    style: GoogleFonts.roboto(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Close Button
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  isVi ? 'Đóng' : 'Close',
+                  style: GoogleFonts.roboto(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -749,7 +906,7 @@ class _ProfileTabState extends State<ProfileTab> {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: Text(localizations.contactUs),
-                  content: const Text('devtest@gmail.com'),
+                  content: const Text('dongfi.helpdesk@gmail.com'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),

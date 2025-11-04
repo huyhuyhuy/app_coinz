@@ -67,6 +67,7 @@ dependencies:
   
   # Utilities
   intl: ^0.20.2
+  url_launcher: ^6.3.0
 
   # Supabase
   supabase_flutter: ^2.0.0

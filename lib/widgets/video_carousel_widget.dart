@@ -3,6 +3,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import '../models/video_ad_model.dart';
 import '../repositories/video_ad_repository.dart';
@@ -674,74 +675,82 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
             ),
           ),
 
-          // Info section - Nằm liền mạch bên dưới video
+          // Info section - Compact single row
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16), // ✅ Thu gọn padding vertical
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade50, Colors.purple.shade50],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Colors.grey.shade50,
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Row: Reward và Views
+                // Reward
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Reward (thu gọn)
+                    Icon(Icons.monetization_on, size: 14, color: Colors.orange.shade700),
+                    const SizedBox(width: 4),
                     Text(
                       '${currentVideo.rewardAmount.toStringAsFixed(3)} DFI',
                       style: GoogleFonts.roboto(
-                        fontSize: 16, // ✅ Giảm từ 18 → 16
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: Colors.orange.shade700,
                       ),
                     ),
-
-                    // Divider (thu gọn)
-                    Container(
-                      width: 1,
-                      height: 20, // ✅ Giảm từ 24 → 20
-                      color: Colors.grey.shade300,
-                    ),
-
-                    // Views (thu gọn)
-                    Row(
-                      children: [
-                        const Icon(Icons.visibility, size: 14, color: Colors.grey), // ✅ Giảm từ 16 → 14
-                        const SizedBox(width: 4),
-                        Text(
-                          '${currentVideo.totalViews}',
-                          style: GoogleFonts.roboto(
-                            fontSize: 13, // ✅ Giảm từ 14 → 13
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Claimed badge (nếu có) - Đơn giản, không có khung
-                    if (_videoClaimed[_currentVideoIndex] == true)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.green.shade700, size: 16), // ✅ Tăng size 14→16
-                          const SizedBox(width: 4),
-                          Text(
-                            'Đã nhận',
-                            style: GoogleFonts.roboto(
-                              fontSize: 13, // ✅ Tăng size 11→13 để rõ hơn
-                              fontWeight: FontWeight.w600,
-                              color: Colors.green.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
                   ],
                 ),
+
+                // Divider
+                Container(
+                  width: 1,
+                  height: 16,
+                  color: Colors.grey.shade300,
+                ),
+
+                // Views
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.visibility, size: 14, color: Colors.grey),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${currentVideo.totalViews}',
+                      style: GoogleFonts.roboto(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Claimed icon (nếu có) - Chỉ icon, không có chữ
+                if (_videoClaimed[_currentVideoIndex] == true)
+                  Icon(
+                    Icons.check_circle,
+                    size: 16,
+                    color: Colors.green.shade700,
+                  ),
+
+                // "Click here" link - chỉ hiển thị nếu videoDescription không trống
+                if (currentVideo.videoDescription != null && 
+                    currentVideo.videoDescription!.isNotEmpty)
+                  InkWell(
+                    onTap: () => _openLink(currentVideo.videoDescription!),
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      child: Text(
+                        'Click here',
+                        style: GoogleFonts.roboto(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -821,6 +830,43 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
     );
   }
   
+  /// ✅ Open link from videoDescription
+  Future<void> _openLink(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        print('[VIDEO_CAROUSEL] ✅ Opened link: $url');
+      } else {
+        print('[VIDEO_CAROUSEL] ❌ Cannot launch URL: $url');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Không thể mở link này'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('[VIDEO_CAROUSEL] ❌ Error opening link: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi mở link: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     // ✅ Dispose all YouTube controllers

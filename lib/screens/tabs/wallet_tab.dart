@@ -416,9 +416,9 @@ class _WalletTabState extends State<WalletTab> {
                           ),
                         ],
                       ),
-                      // ✅ Filter chip: CHỈ hiển thị khi expanded
+                      // ✅ 3 Filter icons: CHỈ hiển thị khi expanded
                       if (_isHistoryExpanded)
-                        _buildCategoryChip(),
+                        _buildCategoryFilters(),
                     ],
                   ),
                 ),
@@ -607,53 +607,66 @@ class _WalletTabState extends State<WalletTab> {
     return incomingTypes.contains(transaction.transactionType);
   }
 
-  /// ✅ Build category chip (cycle: All → Transfer → Earnings → All)
-  Widget _buildCategoryChip() {
-    IconData getIcon() {
-      switch (_currentCategory) {
-        case TransactionCategory.all:
-          return Icons.filter_list; // Icon mới cho All
-        case TransactionCategory.transfer:
-          return Icons.swap_horiz; // Icon cho Transfer
-        case TransactionCategory.earnings:
-          return Icons.trending_up; // Icon cho Earnings
-      }
-    }
-    
-    final isActive = _currentCategory != TransactionCategory.all;
+  /// ✅ Build 3 category filter icons (All, Earnings, Transfer)
+  Widget _buildCategoryFilters() {
     final color = Theme.of(context).colorScheme.primary;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // All icon - sổ đơn giản
+        _buildCategoryIcon(
+          icon: Icons.format_list_bulleted,
+          category: TransactionCategory.all,
+          color: color,
+        ),
+        const SizedBox(width: 8),
+        // Earnings icon - biểu đồ tăng (trending up)
+        _buildCategoryIcon(
+          icon: Icons.trending_up,
+          category: TransactionCategory.earnings,
+          color: color,
+        ),
+        const SizedBox(width: 8),
+        // Transfer icon - 2 mũi tên ngang ngược chiều
+        _buildCategoryIcon(
+          icon: Icons.swap_horiz,
+          category: TransactionCategory.transfer,
+          color: color,
+        ),
+      ],
+    );
+  }
+  
+  /// Build individual category icon
+  Widget _buildCategoryIcon({
+    required IconData icon,
+    required TransactionCategory category,
+    required Color color,
+  }) {
+    final isSelected = _currentCategory == category;
     
     return InkWell(
       onTap: () {
         setState(() {
-          // ✅ Cycle qua 3 categories
-          switch (_currentCategory) {
-            case TransactionCategory.all:
-              _currentCategory = TransactionCategory.transfer;
-              break;
-            case TransactionCategory.transfer:
-              _currentCategory = TransactionCategory.earnings;
-              break;
-            case TransactionCategory.earnings:
-              _currentCategory = TransactionCategory.all;
-              break;
-          }
+          _currentCategory = category;
         });
       },
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isActive ? color : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? color : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isActive ? color : Colors.grey.shade300,
+            color: isSelected ? color : Colors.grey.shade300,
             width: 1.5,
           ),
         ),
         child: Icon(
-          getIcon(),
-          size: 16,
-          color: isActive ? Colors.white : Colors.grey.shade700,
+          icon,
+          size: 20,
+          color: isSelected ? Colors.white : Colors.grey.shade700,
         ),
       ),
     );

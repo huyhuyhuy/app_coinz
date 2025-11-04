@@ -80,8 +80,8 @@ class _MiningTabState extends State<MiningTab> {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     localizations.locale.languageCode == 'vi'
-                        ? 'Liên hệ quảng cáo: test@gmail.com'
-                        : 'Advertisement contact: test@gmail.com',
+                        ? 'Liên hệ quảng cáo: dongfi.helpdesk@gmail.com'
+                        : 'Advertisement contact: dongfi.helpdesk@gmail.com',
                     style: GoogleFonts.roboto(
                       fontSize: 12,
                       color: Colors.grey[600],
