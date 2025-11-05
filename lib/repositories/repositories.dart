@@ -5,4 +5,5 @@ export 'mining_repository.dart';
 export 'video_ad_repository.dart';
 export 'friends_repository.dart';
 export 'transaction_repository.dart';
+export 'notification_repository.dart';
 

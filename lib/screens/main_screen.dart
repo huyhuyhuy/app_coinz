@@ -13,9 +13,11 @@ import '../providers/wallet_provider.dart';
 import '../utils/app_localizations.dart';
 import '../widgets/language_selector.dart';
 import '../widgets/banner_ad_widget.dart';
+import '../widgets/notification_dialog.dart';
 import '../repositories/friends_repository.dart';
 import '../repositories/user_repository.dart';
 import '../services/storage_service.dart';
+import '../services/notification_service.dart';
 import 'tabs/home_tab.dart';
 import 'tabs/mining_tab.dart';
 import 'tabs/wallet_tab.dart';
@@ -31,6 +33,41 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final NotificationService _notificationService = NotificationService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Check và hiển thị thông báo sau khi UI đã render xong
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowNotification();
+    });
+  }
+
+  /// Check và hiển thị thông báo nếu có
+  Future<void> _checkAndShowNotification() async {
+    try {
+      // Chỉ check khi đã đăng nhập
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (!authProvider.isAuthenticated) {
+        return;
+      }
+
+      // Check thông báo mới
+      final notification = await _notificationService.checkForNewNotification();
+      
+      if (notification != null && mounted) {
+        // Hiển thị dialog thông báo
+        await NotificationDialog.show(
+          context,
+          notification,
+          _notificationService,
+        );
+      }
+    } catch (e) {
+      print('[MAIN_SCREEN] ❌ Error checking notification: $e');
+    }
+  }
 
   void _navigateToTab(int index) {
     setState(() {

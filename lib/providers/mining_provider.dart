@@ -12,7 +12,7 @@ class MiningProvider with ChangeNotifier {
   MiningSessionModel? _currentSession;
   double _currentCoins = 0.0;
   int _currentDuration = 0;
-  double _miningSpeed = 9.0; // DFI per second
+  double _miningSpeed = 0.00000009; // DFI per second
   double _speedMultiplier = 1.0;
   
   // Timer
@@ -159,7 +159,7 @@ class MiningProvider with ChangeNotifier {
   void setSpeedMultiplier(double multiplier) {
     _speedMultiplier = multiplier;
     if (_isMining && _currentSession != null) {
-      _miningSpeed = 9.0 * _speedMultiplier;
+      _miningSpeed = 0.00000009 * _speedMultiplier;
     }
     notifyListeners();
     print('[MINING_PROVIDER] ⚡ Speed multiplier set to: $multiplier');
@@ -212,7 +212,7 @@ class MiningProvider with ChangeNotifier {
     _currentSession = null;
     _currentCoins = 0.0;
     _currentDuration = 0;
-    _miningSpeed = 9.0;
+    _miningSpeed = 0.00000009;
     _speedMultiplier = 1.0;
     notifyListeners();
     print('[MINING_PROVIDER] 🔄 Mining provider reset');

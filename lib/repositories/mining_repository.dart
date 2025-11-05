@@ -137,8 +137,8 @@ class MiningRepository {
         sessionId: _generateUuid(),
         userId: userId,
         startTime: DateTime.now(),
-        baseMiningSpeed: 9.0, // 9.0 DFI per second
-        actualMiningSpeed: 9.0 * speedMultiplier,
+        baseMiningSpeed: 0.00000009, // 0.00000009 DFI per second
+        actualMiningSpeed: 0.00000009 * speedMultiplier,
         speedMultiplier: speedMultiplier,
         createdAt: DateTime.now(),
       );
