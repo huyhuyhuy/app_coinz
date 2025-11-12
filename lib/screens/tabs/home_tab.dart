@@ -33,7 +33,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final miningProvider = Provider.of<MiningProvider>(context, listen: false);
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
@@ -65,7 +65,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     if (!_isInitialized) {
       _initializeProviders();
       _isInitialized = true;
@@ -76,7 +76,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final miningProvider = Provider.of<MiningProvider>(context, listen: false);
     final walletProvider = Provider.of<WalletProvider>(context, listen: false);
-    
+
     if (authProvider.userId != null) {
       await miningProvider.initialize(authProvider.userId!);
       await walletProvider.initialize(authProvider.userId!);
@@ -87,10 +87,10 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   /// VD: "Nguyen Van A" → "A"
   String _getFirstName(String? fullName) {
     if (fullName == null || fullName.isEmpty) return 'User';
-    
+
     final parts = fullName.trim().split(' ');
     if (parts.isEmpty) return 'User';
-    
+
     // Lấy chữ cuối cùng (tên)
     return parts.last;
   }
@@ -98,12 +98,12 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    
+
     return Consumer3<AuthProvider, MiningProvider, WalletProvider>(
       builder: (context, authProvider, miningProvider, walletProvider, child) {
         // Extract tên từ full name
         final firstName = _getFirstName(authProvider.userName);
-        
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -116,11 +116,13 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: Theme.of(context).colorScheme.primary,
-                    backgroundImage: authProvider.currentUser?.avatarUrl != null &&
+                    backgroundImage:
+                        authProvider.currentUser?.avatarUrl != null &&
                             authProvider.currentUser!.avatarUrl!.isNotEmpty
                         ? NetworkImage(authProvider.currentUser!.avatarUrl!)
                         : null,
-                    child: authProvider.currentUser?.avatarUrl == null ||
+                    child:
+                        authProvider.currentUser?.avatarUrl == null ||
                             authProvider.currentUser!.avatarUrl!.isEmpty
                         ? Text(
                             firstName.substring(0, 1).toUpperCase(),
@@ -133,7 +135,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         : null,
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Welcome text
                   Text(
                     localizations.locale.languageCode == 'vi'
@@ -148,7 +150,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               // Wallet Balance Card (Clickable)
               InkWell(
                 onTap: widget.onNavigateToWallet,
@@ -222,7 +224,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Quick Stats Card
               Card(
                 child: Padding(
@@ -319,18 +321,26 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                         child: ElevatedButton.icon(
                           onPressed: () async {
                             if (miningProvider.isMining) {
-                              await miningProvider.stopMining(authProvider.userId!);
-                              await walletProvider.refresh(authProvider.userId!);
+                              await miningProvider.stopMining(
+                                authProvider.userId!,
+                              );
+                              await walletProvider.refresh(
+                                authProvider.userId!,
+                              );
                             } else {
                               // Truyền totalReferrals để tính speed multiplier
                               await miningProvider.startMining(
                                 authProvider.userId!,
-                                totalReferrals: authProvider.currentUser?.totalReferrals ?? 0,
+                                totalReferrals:
+                                    authProvider.currentUser?.totalReferrals ??
+                                    0,
                               );
                             }
                           },
                           icon: Icon(
-                            miningProvider.isMining ? Icons.stop : Icons.play_arrow,
+                            miningProvider.isMining
+                                ? Icons.stop
+                                : Icons.play_arrow,
                             size: 24,
                           ),
                           label: Text(
@@ -376,11 +386,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
       children: [
         // ✅ Hiển thị icon phù hợp: Material Icon hoặc PNG Asset
         icon is IconData
-            ? Icon(
-                icon,
-                size: 32,
-                color: color,
-              )
+            ? Icon(icon, size: 32, color: color)
             : Image.asset(
                 icon as String,
                 width: 32,
@@ -390,19 +396,13 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
         const SizedBox(height: 8),
         Text(
           value,
-          style: GoogleFonts.roboto(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.roboto(fontSize: 11, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.roboto(
-            fontSize: 11,
-            color: Colors.grey[600],
-          ),
+          style: GoogleFonts.roboto(fontSize: 9, color: Colors.grey[600]),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -410,6 +410,4 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
       ],
     );
   }
-
 }
-
