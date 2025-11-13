@@ -1,15 +1,32 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../database/database_helper.dart';
 import '../services/supabase_service.dart';
 import '../models/models.dart';
 
+class UserRepositoryException implements Exception {
+  final String code;
+  final String? message;
+
+  UserRepositoryException(this.code, {this.message});
+
+  @override
+  String toString() =>
+      'UserRepositoryException(code: $code, message: $message)';
+}
+
 /// User Repository - Quản lý dữ liệu user (local + server)
 class UserRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  
+
+  bool _isRecordNotFoundError(Object error) {
+    return error is PostgrestException && error.code == 'PGRST116';
+  }
+
   // ============================================================================
   // LOCAL DATABASE OPERATIONS
   // ============================================================================
-  
+
   /// Get user from local database by userId
   Future<UserModel?> getLocalUser(String userId) async {
     try {
@@ -18,7 +35,7 @@ class UserRepository {
         where: 'user_id = ?',
         whereArgs: [userId],
       );
-      
+
       if (result == null) return null;
       return UserModel.fromMap(result);
     } catch (e) {
@@ -26,7 +43,7 @@ class UserRepository {
       return null;
     }
   }
-  
+
   /// Get user from local database by email
   Future<UserModel?> getLocalUserByEmail(String email) async {
     try {
@@ -35,7 +52,7 @@ class UserRepository {
         where: 'email = ?',
         whereArgs: [email],
       );
-      
+
       if (result == null) return null;
       return UserModel.fromMap(result);
     } catch (e) {
@@ -43,7 +60,24 @@ class UserRepository {
       return null;
     }
   }
-  
+
+  /// Get user from local database by phone number
+  Future<UserModel?> getLocalUserByPhone(String phoneNumber) async {
+    try {
+      final result = await _dbHelper.queryOne(
+        'users',
+        where: 'phone_number = ?',
+        whereArgs: [phoneNumber],
+      );
+
+      if (result == null) return null;
+      return UserModel.fromMap(result);
+    } catch (e) {
+      print('[USER_REPO] ❌ Error getting local user by phone: $e');
+      return null;
+    }
+  }
+
   /// Save user to local database
   Future<bool> saveLocalUser(UserModel user) async {
     try {
@@ -55,7 +89,7 @@ class UserRepository {
       return false;
     }
   }
-  
+
   /// Update user in local database
   Future<bool> updateLocalUser(UserModel user) async {
     try {
@@ -72,11 +106,11 @@ class UserRepository {
       return false;
     }
   }
-  
+
   // ============================================================================
   // SERVER DATABASE OPERATIONS
   // ============================================================================
-  
+
   /// Get user from server by userId
   Future<UserModel?> getServerUser(String userId) async {
     try {
@@ -85,15 +119,19 @@ class UserRepository {
           .select()
           .eq('id', userId)
           .single();
-      
+
       print('[USER_REPO] ✅ User fetched from server: ${response['email']}');
       return UserModel.fromJson(response);
     } catch (e) {
+      if (_isRecordNotFoundError(e)) {
+        print('[USER_REPO] ℹ️ User not found on server: $userId');
+        return null;
+      }
       print('[USER_REPO] ❌ Error getting server user: $e');
       return null;
     }
   }
-  
+
   /// Get user from server by email
   Future<UserModel?> getServerUserByEmail(String email) async {
     try {
@@ -102,15 +140,42 @@ class UserRepository {
           .select()
           .eq('email', email)
           .single();
-      
+
       print('[USER_REPO] ✅ User fetched from server: ${response['email']}');
       return UserModel.fromJson(response);
     } catch (e) {
+      if (_isRecordNotFoundError(e)) {
+        print('[USER_REPO] ℹ️ User not found on server by email: $email');
+        return null;
+      }
       print('[USER_REPO] ❌ Error getting server user by email: $e');
       return null;
     }
   }
-  
+
+  /// Get user from server by phone number
+  Future<UserModel?> getServerUserByPhone(String phoneNumber) async {
+    try {
+      final response = await SupabaseService.client
+          .from('users')
+          .select()
+          .eq('phone_number', phoneNumber)
+          .single();
+
+      print(
+        '[USER_REPO] ✅ User fetched from server by phone: ${response['phone_number']}',
+      );
+      return UserModel.fromJson(response);
+    } catch (e) {
+      if (_isRecordNotFoundError(e)) {
+        print('[USER_REPO] ℹ️ User not found on server by phone: $phoneNumber');
+        return null;
+      }
+      print('[USER_REPO] ❌ Error getting server user by phone: $e');
+      return null;
+    }
+  }
+
   /// Create user on server
   Future<UserModel?> createServerUser(UserModel user) async {
     try {
@@ -119,7 +184,7 @@ class UserRepository {
           .insert(user.toJson())
           .select()
           .single();
-      
+
       print('[USER_REPO] ✅ User created on server: ${response['email']}');
       return UserModel.fromJson(response);
     } catch (e) {
@@ -127,7 +192,7 @@ class UserRepository {
       return null;
     }
   }
-  
+
   /// Update user on server
   Future<bool> updateServerUser(UserModel user) async {
     try {
@@ -135,7 +200,7 @@ class UserRepository {
           .from('users')
           .update(user.toJson())
           .eq('id', user.userId);
-      
+
       print('[USER_REPO] ✅ User updated on server: ${user.email}');
       return true;
     } catch (e) {
@@ -143,29 +208,29 @@ class UserRepository {
       return false;
     }
   }
-  
+
   // ============================================================================
   // SYNC OPERATIONS
   // ============================================================================
-  
+
   /// Sync user from server to local
   Future<bool> syncUserFromServer(String userId) async {
     try {
       print('[USER_REPO] 🔄 Syncing user from server...');
-      
+
       final serverUser = await getServerUser(userId);
       if (serverUser == null) {
         print('[USER_REPO] ❌ User not found on server');
         return false;
       }
-      
+
       final localUser = await getLocalUser(userId);
       if (localUser == null) {
         await saveLocalUser(serverUser);
       } else {
         await updateLocalUser(serverUser);
       }
-      
+
       print('[USER_REPO] ✅ User synced from server');
       return true;
     } catch (e) {
@@ -173,25 +238,25 @@ class UserRepository {
       return false;
     }
   }
-  
+
   /// Sync user from local to server
   Future<bool> syncUserToServer(String userId) async {
     try {
       print('[USER_REPO] 🔄 Syncing user to server...');
-      
+
       final localUser = await getLocalUser(userId);
       if (localUser == null) {
         print('[USER_REPO] ❌ User not found in local database');
         return false;
       }
-      
+
       final serverUser = await getServerUser(userId);
       if (serverUser == null) {
         await createServerUser(localUser);
       } else {
         await updateServerUser(localUser);
       }
-      
+
       print('[USER_REPO] ✅ User synced to server');
       return true;
     } catch (e) {
@@ -199,13 +264,13 @@ class UserRepository {
       return false;
     }
   }
-  
+
   // ============================================================================
   // AUTHENTICATION OPERATIONS
   // ============================================================================
-  
+
   /// Register new user
-  Future<UserModel?> register({
+  Future<UserModel> register({
     required String email,
     required String password,
     required String fullName,
@@ -214,19 +279,33 @@ class UserRepository {
   }) async {
     try {
       print('[USER_REPO] 📝 Registering new user: $email');
-      
+      final normalizedEmail = email.trim();
+      final sanitizedPhoneNumber = phoneNumber?.replaceAll(RegExp(r'\s+'), '');
+
+      if (sanitizedPhoneNumber == null || sanitizedPhoneNumber.isEmpty) {
+        throw UserRepositoryException('phone_required');
+      }
+
       // Check if user already exists
-      final existingUser = await getServerUserByEmail(email);
-      if (existingUser != null) {
-        print('[USER_REPO] ❌ User already exists');
-        return null;
+      final existingByEmail = await getServerUserByEmail(normalizedEmail);
+      final existingByPhone = await getServerUserByPhone(sanitizedPhoneNumber);
+
+      if (existingByEmail != null && existingByPhone != null) {
+        print('[USER_REPO] ❌ Email and phone already in use');
+        throw UserRepositoryException('email_phone_exists');
+      } else if (existingByEmail != null) {
+        print('[USER_REPO] ❌ Email already in use');
+        throw UserRepositoryException('email_exists');
+      } else if (existingByPhone != null) {
+        print('[USER_REPO] ❌ Phone already in use');
+        throw UserRepositoryException('phone_exists');
       }
 
       // Validate referral code if provided
       UserModel? referrer;
       if (referralCode != null && referralCode.isNotEmpty) {
         print('[USER_REPO] 🔍 Validating referral code: $referralCode');
-        
+
         // Tìm người giới thiệu bằng referral code
         try {
           final response = await SupabaseService.client
@@ -234,100 +313,123 @@ class UserRepository {
               .select()
               .eq('referral_code', referralCode)
               .single();
-          
+
           referrer = UserModel.fromJson(response);
-          print('[USER_REPO] ✅ Referral code valid. Referrer: ${referrer.fullName}');
+          print(
+            '[USER_REPO] ✅ Referral code valid. Referrer: ${referrer.fullName}',
+          );
         } catch (e) {
           print('[USER_REPO] ❌ Invalid referral code: $referralCode');
           // Mã không hợp lệ - không throw error, chỉ bỏ qua
           referrer = null;
         }
       }
-      
+
       // Create user model with UUID format
       final user = UserModel(
         userId: _generateUuid(),
-        email: email,
+        email: normalizedEmail,
         passwordHash: password, // TODO: Hash password with bcrypt
         fullName: fullName,
-        phoneNumber: phoneNumber,
+        phoneNumber: sanitizedPhoneNumber,
         referralCode: _generateReferralCode(),
         referredBy: referrer?.userId, // Lưu ID người giới thiệu
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       // Save to server
       final serverUser = await createServerUser(user);
       if (serverUser == null) {
         print('[USER_REPO] ❌ Failed to create user on server');
-        return null;
+        throw UserRepositoryException(
+          'unknown',
+          message: 'Failed to create user on server',
+        );
       }
-      
+
       // Save to local
       await saveLocalUser(serverUser);
 
       // Nếu có người giới thiệu, tăng totalReferrals cho họ
       if (referrer != null) {
-        print('[USER_REPO] 🎁 Incrementing referrals for: ${referrer.fullName}');
-        
+        print(
+          '[USER_REPO] 🎁 Incrementing referrals for: ${referrer.fullName}',
+        );
+
         try {
           final updatedReferrer = referrer.copyWith(
             totalReferrals: referrer.totalReferrals + 1,
             updatedAt: DateTime.now(),
           );
-          
+
           await updateServerUser(updatedReferrer);
           await updateLocalUser(updatedReferrer);
-          
-          print('[USER_REPO] ✅ Referrer totalReferrals: ${referrer.totalReferrals} → ${updatedReferrer.totalReferrals}');
+
+          print(
+            '[USER_REPO] ✅ Referrer totalReferrals: ${referrer.totalReferrals} → ${updatedReferrer.totalReferrals}',
+          );
         } catch (e) {
           print('[USER_REPO] ⚠️ Failed to update referrer: $e');
           // Không throw error, user registration đã thành công
         }
       }
-      
+
       print('[USER_REPO] ✅ User registered successfully');
       return serverUser;
+    } on UserRepositoryException {
+      rethrow;
     } catch (e) {
       print('[USER_REPO] ❌ Error registering user: $e');
-      return null;
+      throw UserRepositoryException('unknown', message: e.toString());
     }
   }
-  
-  /// Login user
-  Future<UserModel?> login(String email, String password) async {
+
+  /// Login user using email or phone identifier
+  Future<UserModel> login(String identifier, String password) async {
     try {
-      print('[USER_REPO] 🔐 Logging in user: $email');
-      
-      // Get user from server
-      final user = await getServerUserByEmail(email);
-      if (user == null) {
-        print('[USER_REPO] ❌ User not found');
-        return null;
+      final trimmedIdentifier = identifier.trim();
+      print(
+        '[USER_REPO] 🔐 Logging in user with identifier: $trimmedIdentifier',
+      );
+
+      final bool isEmail = trimmedIdentifier.contains('@');
+      UserModel? user;
+      if (isEmail) {
+        user = await getServerUserByEmail(trimmedIdentifier);
+      } else {
+        final sanitizedPhone = trimmedIdentifier.replaceAll(RegExp(r'\s+'), '');
+        user = await getServerUserByPhone(sanitizedPhone);
       }
-      
+
+      if (user == null) {
+        print('[USER_REPO] ❌ Identifier not found on server');
+        throw UserRepositoryException('identifier_not_found');
+      }
+
       // Check password (TODO: Use bcrypt)
       if (user.passwordHash != password) {
         print('[USER_REPO] ❌ Invalid password');
-        return null;
+        throw UserRepositoryException('invalid_password');
       }
-      
+
       // Update last login
       final updatedUser = user.copyWith(lastLogin: DateTime.now());
       await updateServerUser(updatedUser);
-      
+
       // Save to local
       await saveLocalUser(updatedUser);
-      
+
       print('[USER_REPO] ✅ User logged in successfully');
       return updatedUser;
+    } on UserRepositoryException {
+      rethrow;
     } catch (e) {
       print('[USER_REPO] ❌ Error logging in: $e');
-      return null;
+      throw UserRepositoryException('unknown', message: e.toString());
     }
   }
-  
+
   // ============================================================================
   // AVATAR OPERATIONS
   // ============================================================================
@@ -395,7 +497,10 @@ class UserRepository {
     final part2 = (timestamp % 65536).toRadixString(16).padLeft(4, '0');
     final part3 = '4${(microseconds % 4096).toRadixString(16).padLeft(3, '0')}';
     final part4 = 'a${(microseconds % 4096).toRadixString(16).padLeft(3, '0')}';
-    final part5 = microseconds.toRadixString(16).padLeft(12, '0').substring(0, 12);
+    final part5 = microseconds
+        .toRadixString(16)
+        .padLeft(12, '0')
+        .substring(0, 12);
 
     return '$part1-$part2-$part3-$part4-$part5';
   }
@@ -406,4 +511,3 @@ class UserRepository {
     return 'REF${timestamp.toString().substring(timestamp.toString().length - 8)}';
   }
 }
-

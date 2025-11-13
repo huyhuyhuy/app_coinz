@@ -16,9 +16,10 @@ class AuthProvider extends ChangeNotifier {
   bool _isInitialized = false;
   bool _isLoading = false;
   UserModel? _currentUser;
+  String? _errorCode;
 
   bool get isInitialized => _isInitialized;
-  
+
   /// Kiểm tra xem AuthProvider đã sẵn sàng chưa
   Future<void> waitForInitialization() async {
     while (!_isInitialized) {
@@ -33,6 +34,7 @@ class AuthProvider extends ChangeNotifier {
   String? get userPhone => _userPhone;
   bool get isLoading => _isLoading;
   UserModel? get currentUser => _currentUser;
+  String? get errorCode => _errorCode;
 
   AuthProvider() {
     // Khởi tạo AuthProvider trong background để không block UI
@@ -59,6 +61,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _checkAuthStatus() async {
     print('[AUTH_PROVIDER] 🔍 Checking auth status...');
     _isLoading = true;
+    _errorCode = null;
     notifyListeners();
 
     try {
@@ -69,7 +72,9 @@ class AuthProvider extends ChangeNotifier {
       final userId = prefs.getString('user_id');
       final phone = prefs.getString('user_phone');
 
-      print('[AUTH_PROVIDER] 📋 Stored data: token=$token, email=$email, userId=$userId');
+      print(
+        '[AUTH_PROVIDER] 📋 Stored data: token=$token, email=$email, userId=$userId',
+      );
 
       if (token != null && email != null && userId != null) {
         print('[AUTH_PROVIDER] 🔄 Restoring session: $email');
@@ -83,13 +88,15 @@ class AuthProvider extends ChangeNotifier {
         try {
           print('[AUTH_PROVIDER] 🔄 Syncing user data from server...');
           await _userRepo.syncUserFromServer(userId);
-          
+
           // Load currentUser từ local database
           _currentUser = await _userRepo.getLocalUser(userId);
           if (_currentUser != null) {
-            print('[AUTH_PROVIDER] ✅ Current user loaded: ${_currentUser!.referralCode}, referrals: ${_currentUser!.totalReferrals}');
+            print(
+              '[AUTH_PROVIDER] ✅ Current user loaded: ${_currentUser!.referralCode}, referrals: ${_currentUser!.totalReferrals}',
+            );
           }
-          
+
           // Sync wallet from server
           await _walletRepo.syncWalletFromServer(userId);
           print('[AUTH_PROVIDER] ✅ Session restored successfully');
@@ -103,65 +110,72 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       print('[AUTH_PROVIDER] ❌ Failed to restore session: $e');
       _isAuthenticated = false;
+      _errorCode = null;
     } finally {
       _isLoading = false;
       notifyListeners();
-      print('[AUTH_PROVIDER] ✅ Auth check completed. isAuthenticated=$_isAuthenticated');
+      print(
+        '[AUTH_PROVIDER] ✅ Auth check completed. isAuthenticated=$_isAuthenticated',
+      );
     }
   }
 
   /// ✅ VẤN ĐỀ 6: Load đầy đủ thông tin user từ server khi login
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String identifier, String password) async {
     _isLoading = true;
+    _errorCode = null;
     notifyListeners();
 
     try {
-      print('[AUTH_PROVIDER] 🔐 Logging in: $email');
+      print('[AUTH_PROVIDER] 🔐 Logging in with identifier: $identifier');
 
-      // Login with UserRepository
-      final user = await _userRepo.login(email, password);
+      // Login with UserRepository (email or phone)
+      final user = await _userRepo.login(identifier.trim(), password);
 
-      if (user != null) {
-        _isAuthenticated = true;
-        _currentUser = user;
-        _userId = user.userId;
-        _userEmail = user.email;
-        _userName = user.fullName;
-        _userPhone = user.phoneNumber;
+      _isAuthenticated = true;
+      _currentUser = user;
+      _userId = user.userId;
+      _userEmail = user.email;
+      _userName = user.fullName;
+      _userPhone = user.phoneNumber;
+      _errorCode = null;
 
-        // ✅ VẤN ĐỀ 6: Sync user data từ server để lấy totalReferrals mới nhất
-        print('[AUTH_PROVIDER] 🔄 Syncing user data from server...');
-        await _userRepo.syncUserFromServer(user.userId);
-        
-        // Reload current user sau khi sync
-        final updatedUser = await _userRepo.getLocalUser(user.userId);
-        if (updatedUser != null) {
-          _currentUser = updatedUser;
-          print('[AUTH_PROVIDER] ✅ User data synced. Total referrals: ${updatedUser.totalReferrals}');
-        }
+      // ✅ VẤN ĐỀ 6: Sync user data từ server để lấy totalReferrals mới nhất
+      print('[AUTH_PROVIDER] 🔄 Syncing user data from server...');
+      await _userRepo.syncUserFromServer(user.userId);
 
-        // Sync wallet from server to local
-        await _walletRepo.syncWalletFromServer(user.userId);
-
-        // Save to local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', 'token_${user.userId}');
-        await prefs.setString('user_id', user.userId);
-        await prefs.setString('user_email', user.email);
-        await prefs.setString('user_name', user.fullName);
-        if (user.phoneNumber != null) {
-          await prefs.setString('user_phone', user.phoneNumber!);
-        }
-
-        print('[AUTH_PROVIDER] ✅ Login successful');
-        notifyListeners();
-        return true;
+      // Reload current user sau khi sync
+      final updatedUser = await _userRepo.getLocalUser(user.userId);
+      if (updatedUser != null) {
+        _currentUser = updatedUser;
+        print(
+          '[AUTH_PROVIDER] ✅ User data synced. Total referrals: ${updatedUser.totalReferrals}',
+        );
       }
 
-      print('[AUTH_PROVIDER] ❌ Login failed');
+      // Sync wallet from server to local
+      await _walletRepo.syncWalletFromServer(user.userId);
+
+      // Save to local storage
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', 'token_${user.userId}');
+      await prefs.setString('user_id', user.userId);
+      await prefs.setString('user_email', user.email);
+      await prefs.setString('user_name', user.fullName);
+      if (user.phoneNumber != null) {
+        await prefs.setString('user_phone', user.phoneNumber!);
+      }
+
+      print('[AUTH_PROVIDER] ✅ Login successful');
+      notifyListeners();
+      return true;
+    } on UserRepositoryException catch (e) {
+      _errorCode = e.code;
+      print('[AUTH_PROVIDER] ❌ Login error (${e.code}): ${e.message}');
       return false;
     } catch (e) {
       print('[AUTH_PROVIDER] ❌ Login error: $e');
+      _errorCode = 'unknown';
       return false;
     } finally {
       _isLoading = false;
@@ -170,8 +184,16 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// ✅ VẤN ĐỀ 6: Load đầy đủ thông tin user từ server khi register
-  Future<bool> register(String fullName, String phoneNumber, String email, String password, String confirmPassword, [String? referralCode]) async {
+  Future<bool> register(
+    String fullName,
+    String phoneNumber,
+    String email,
+    String password,
+    String confirmPassword, [
+    String? referralCode,
+  ]) async {
     _isLoading = true;
+    _errorCode = null;
     notifyListeners();
 
     try {
@@ -195,47 +217,50 @@ class AuthProvider extends ChangeNotifier {
         referralCode: referralCode,
       );
 
-      if (user != null) {
-        _isAuthenticated = true;
-        _currentUser = user;
-        _userId = user.userId;
-        _userEmail = user.email;
-        _userName = user.fullName;
-        _userPhone = user.phoneNumber;
+      _isAuthenticated = true;
+      _currentUser = user;
+      _userId = user.userId;
+      _userEmail = user.email;
+      _userName = user.fullName;
+      _userPhone = user.phoneNumber;
+      _errorCode = null;
 
-        // ✅ VẤN ĐỀ 6: Sync user data từ server để đảm bảo có đầy đủ thông tin
-        print('[AUTH_PROVIDER] 🔄 Syncing new user data from server...');
-        await _userRepo.syncUserFromServer(user.userId);
-        
-        // Reload current user sau khi sync
-        final updatedUser = await _userRepo.getLocalUser(user.userId);
-        if (updatedUser != null) {
-          _currentUser = updatedUser;
-          print('[AUTH_PROVIDER] ✅ New user data synced. Referral code: ${updatedUser.referralCode}');
-        }
+      // ✅ VẤN ĐỀ 6: Sync user data từ server để đảm bảo có đầy đủ thông tin
+      print('[AUTH_PROVIDER] 🔄 Syncing new user data from server...');
+      await _userRepo.syncUserFromServer(user.userId);
 
-        // Create wallet for new user
-        await _walletRepo.createWallet(user.userId);
-
-        // Save to local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', 'token_${user.userId}');
-        await prefs.setString('user_id', user.userId);
-        await prefs.setString('user_email', user.email);
-        await prefs.setString('user_name', user.fullName);
-        if (user.phoneNumber != null) {
-          await prefs.setString('user_phone', user.phoneNumber!);
-        }
-
-        print('[AUTH_PROVIDER] ✅ Registration successful');
-        notifyListeners();
-        return true;
+      // Reload current user sau khi sync
+      final updatedUser = await _userRepo.getLocalUser(user.userId);
+      if (updatedUser != null) {
+        _currentUser = updatedUser;
+        print(
+          '[AUTH_PROVIDER] ✅ New user data synced. Referral code: ${updatedUser.referralCode}',
+        );
       }
 
-      print('[AUTH_PROVIDER] ❌ Registration failed');
+      // Create wallet for new user
+      await _walletRepo.createWallet(user.userId);
+
+      // Save to local storage
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', 'token_${user.userId}');
+      await prefs.setString('user_id', user.userId);
+      await prefs.setString('user_email', user.email);
+      await prefs.setString('user_name', user.fullName);
+      if (user.phoneNumber != null) {
+        await prefs.setString('user_phone', user.phoneNumber!);
+      }
+
+      print('[AUTH_PROVIDER] ✅ Registration successful');
+      notifyListeners();
+      return true;
+    } on UserRepositoryException catch (e) {
+      _errorCode = e.code;
+      print('[AUTH_PROVIDER] ❌ Registration error (${e.code}): ${e.message}');
       return false;
     } catch (e) {
       print('[AUTH_PROVIDER] ❌ Registration error: $e');
+      _errorCode = 'unknown';
       return false;
     } finally {
       _isLoading = false;
@@ -246,13 +271,13 @@ class AuthProvider extends ChangeNotifier {
   /// 🔄 Refresh current user data (sau khi upload avatar)
   Future<void> refreshCurrentUser() async {
     if (_userId == null) return;
-    
+
     try {
       print('[AUTH_PROVIDER] 🔄 Refreshing current user data...');
-      
+
       // Sync user data từ server
       await _userRepo.syncUserFromServer(_userId!);
-      
+
       // Reload current user từ local database
       final updatedUser = await _userRepo.getLocalUser(_userId!);
       if (updatedUser != null) {
@@ -311,9 +336,10 @@ class AuthProvider extends ChangeNotifier {
       _userName = null;
       _userPhone = null;
       _currentUser = null;
+      _errorCode = null;
 
       print('[AUTH_PROVIDER] ✅ Logout successful');
-      
+
       // NOTE: Wallet & Mining providers sẽ được reset từ ProfileTab
     } catch (e) {
       print('[AUTH_PROVIDER] ❌ Logout error: $e');

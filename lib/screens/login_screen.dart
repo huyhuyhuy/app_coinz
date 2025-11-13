@@ -18,7 +18,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final success = await authProvider.login(
-        _emailController.text.trim(),
+        _identifierController.text.trim(),
         _passwordController.text,
       );
 
@@ -40,7 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.loginFailed),
+            content: Text(
+              _resolveErrorMessage(authProvider.errorCode, localizations),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -48,10 +50,28 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  String _resolveErrorMessage(String? code, AppLocalizations localizations) {
+    switch (code) {
+      case 'identifier_not_found':
+        return localizations.accountNotFound;
+      case 'invalid_password':
+        return localizations.incorrectPassword;
+      default:
+        return localizations.loginFailed;
+    }
+  }
+
+  @override
+  void dispose() {
+    _identifierController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -62,15 +82,15 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                
+
                 // Language Selector
                 Align(
                   alignment: Alignment.topRight,
                   child: const LanguageSelector(),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // App Icon
                 Center(
                   child: Container(
@@ -87,9 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Title
                 Text(
                   localizations.welcomeMessage,
@@ -100,33 +120,41 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 40),
-                
-                // Email Field
+
+                // Identifier Field (Email or Phone)
                 TextFormField(
-                  controller: _emailController,
+                  controller: _identifierController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    labelText: localizations.email,
-                    prefixIcon: const Icon(Icons.email_outlined),
+                    labelText: localizations.emailOrPhone,
+                    prefixIcon: const Icon(Icons.alternate_email),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return localizations.pleaseEnterEmail;
+                      return localizations.pleaseEnterEmailOrPhone;
                     }
-                    if (!value.contains('@')) {
-                      return localizations.pleaseEnterValidEmail;
+                    final trimmed = value.trim();
+                    if (trimmed.contains('@')) {
+                      if (!trimmed.contains('.') || trimmed.startsWith('@')) {
+                        return localizations.pleaseEnterValidEmail;
+                      }
+                    } else {
+                      final sanitized = trimmed.replaceAll(RegExp(r'\s+'), '');
+                      if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(sanitized)) {
+                        return localizations.pleaseEnterValidEmailOrPhone;
+                      }
                     }
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
@@ -136,7 +164,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -158,9 +188,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Login Button
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
@@ -180,7 +210,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(
@@ -193,9 +225,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Forgot Password
                 TextButton(
                   onPressed: () {
@@ -208,9 +240,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Register Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -218,7 +250,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       localizations.dontHaveAccount,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                     TextButton(
@@ -239,7 +273,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
               ],
             ),

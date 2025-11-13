@@ -46,6 +46,13 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
 
   final VideoAdRepository _videoAdRepo = VideoAdRepository();
 
+  /// Format số với tối đa 8 chữ số thập phân, cắt bỏ số 0 ở cuối
+  String _formatRewardAmount(double amount) {
+    final formatted = amount.toStringAsFixed(8);
+    // Cắt bỏ số 0 ở cuối và dấu chấm thừa
+    return formatted.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -682,75 +689,82 @@ class _VideoCarouselWidgetState extends State<VideoCarouselWidget> {
               color: Colors.grey.shade50,
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Reward
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.monetization_on, size: 14, color: Colors.orange.shade700),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${currentVideo.rewardAmount.toStringAsFixed(3)} DFI',
-                      style: GoogleFonts.roboto(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange.shade700,
-                      ),
+                // Reward - Expanded để tự điều chỉnh và không wrap
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    '${_formatRewardAmount(currentVideo.rewardAmount)} DFI',
+                    style: GoogleFonts.roboto(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade700,
                     ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 ),
 
-                // Divider
-                Container(
-                  width: 1,
-                  height: 16,
-                  color: Colors.grey.shade300,
-                ),
+                const SizedBox(width: 4),
 
-                // Views
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.visibility, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${currentVideo.totalViews}',
-                      style: GoogleFonts.roboto(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                // Views - Expanded để tự điều chỉnh
+                Expanded(
+                  flex: 1,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.visibility, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '${currentVideo.totalViews}',
+                          style: GoogleFonts.roboto(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
 
                 // Claimed icon (nếu có) - Chỉ icon, không có chữ
-                if (_videoClaimed[_currentVideoIndex] == true)
+                if (_videoClaimed[_currentVideoIndex] == true) ...[
+                  const SizedBox(width: 4),
                   Icon(
                     Icons.check_circle,
                     size: 16,
                     color: Colors.green.shade700,
                   ),
+                ],
 
                 // "Click here" link - chỉ hiển thị nếu videoDescription không trống
                 if (currentVideo.videoDescription != null && 
-                    currentVideo.videoDescription!.isNotEmpty)
-                  InkWell(
-                    onTap: () => _openLink(currentVideo.videoDescription!),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                      child: Text(
-                        'Click here',
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade700,
+                    currentVideo.videoDescription!.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: InkWell(
+                      onTap: () => _openLink(currentVideo.videoDescription!),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        child: Text(
+                          'Click here',
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),

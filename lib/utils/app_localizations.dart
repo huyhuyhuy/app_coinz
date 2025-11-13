@@ -64,6 +64,15 @@ class AppLocalizations {
     }
   }
 
+  String get emailOrPhone {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Email hoặc số điện thoại';
+      default:
+        return 'Email or Phone Number';
+    }
+  }
+
   String get fullName {
     switch (locale.languageCode) {
       case 'vi':
@@ -374,12 +383,30 @@ class AppLocalizations {
     }
   }
 
+  String get pleaseEnterEmailOrPhone {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập email hoặc số điện thoại';
+      default:
+        return 'Please enter your email or phone number';
+    }
+  }
+
   String get pleaseEnterValidEmail {
     switch (locale.languageCode) {
       case 'vi':
         return 'Vui lòng nhập email hợp lệ';
       default:
         return 'Please enter a valid email';
+    }
+  }
+
+  String get pleaseEnterValidEmailOrPhone {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Vui lòng nhập email hoặc số điện thoại hợp lệ';
+      default:
+        return 'Please enter a valid email or phone number';
     }
   }
 
@@ -446,6 +473,33 @@ class AppLocalizations {
     }
   }
 
+  String get emailAlreadyUsed {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Email này đã được sử dụng';
+      default:
+        return 'This email is already in use';
+    }
+  }
+
+  String get phoneAlreadyUsed {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Số điện thoại này đã được sử dụng';
+      default:
+        return 'This phone number is already in use';
+    }
+  }
+
+  String get emailOrPhoneAlreadyUsed {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Email hoặc số điện thoại này đã được sử dụng';
+      default:
+        return 'This email or phone number is already in use';
+    }
+  }
+
   String get registrationFailed {
     switch (locale.languageCode) {
       case 'vi':
@@ -461,6 +515,24 @@ class AppLocalizations {
         return 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
       default:
         return 'Login failed. Please check your credentials.';
+    }
+  }
+
+  String get accountNotFound {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Không tìm thấy tài khoản với thông tin này';
+      default:
+        return 'No account found for this identifier';
+    }
+  }
+
+  String get incorrectPassword {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Mật khẩu không chính xác';
+      default:
+        return 'Incorrect password';
     }
   }
 

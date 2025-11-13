@@ -45,8 +45,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailController.text.trim(),
         _passwordController.text,
         _confirmPasswordController.text,
-        _referralCodeController.text.trim().isEmpty 
-            ? null 
+        _referralCodeController.text.trim().isEmpty
+            ? null
             : _referralCodeController.text.trim(),
       );
 
@@ -60,7 +60,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final localizations = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(localizations.registrationFailed),
+            content: Text(
+              _resolveRegisterError(authProvider.errorCode, localizations),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -68,18 +70,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  String _resolveRegisterError(String? code, AppLocalizations localizations) {
+    switch (code) {
+      case 'email_exists':
+        return localizations.emailAlreadyUsed;
+      case 'phone_exists':
+        return localizations.phoneAlreadyUsed;
+      case 'email_phone_exists':
+        return localizations.emailOrPhoneAlreadyUsed;
+      case 'phone_required':
+        return localizations.pleaseEnterPhoneNumber;
+      default:
+        return localizations.registrationFailed;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.register),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: const [
-          LanguageSelector(),
-        ],
+        actions: const [LanguageSelector()],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -90,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-                
+
                 // App Icon
                 Center(
                   child: Container(
@@ -107,9 +122,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 30),
-                
+
                 // Title
                 Text(
                   localizations.createAccount,
@@ -120,9 +135,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Full Name Field
                 TextFormField(
                   controller: _fullNameController,
@@ -144,9 +159,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // ⚠️ Thông báo quan trọng về tên thật
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -179,9 +194,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Phone Number Field
                 TextFormField(
                   controller: _phoneController,
@@ -203,9 +218,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Email Field
                 TextFormField(
                   controller: _emailController,
@@ -227,9 +242,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
@@ -239,7 +254,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -261,9 +278,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Confirm Password Field
                 TextFormField(
                   controller: _confirmPasswordController,
@@ -273,7 +290,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                        _obscureConfirmPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -295,7 +314,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 20),
 
                 // Referral Code Field (Optional)
@@ -315,14 +334,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Không bắt buộc, nên không có validator required
                   // Validation sẽ được thực hiện trong repository
                 ),
-                
+
                 const SizedBox(height: 24),
 
                 // Register Button
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return ElevatedButton(
-                      onPressed: authProvider.isLoading ? null : _handleRegister,
+                      onPressed: authProvider.isLoading
+                          ? null
+                          : _handleRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
@@ -337,7 +358,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(
@@ -360,7 +383,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Text(
                       localizations.alreadyHaveAccount,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                     TextButton(

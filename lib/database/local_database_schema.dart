@@ -20,7 +20,7 @@ class LocalDatabaseSchema {
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       full_name TEXT NOT NULL,
-      phone_number TEXT,
+      phone_number TEXT UNIQUE,
       avatar_url TEXT,
       is_verified INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
@@ -181,31 +181,31 @@ class LocalDatabaseSchema {
     'CREATE INDEX idx_users_user_id ON users(user_id)',
     'CREATE INDEX idx_users_email ON users(email)',
     'CREATE INDEX idx_users_referral_code ON users(referral_code)',
-    
+
     'CREATE INDEX idx_wallets_user_id ON wallets(user_id)',
     'CREATE INDEX idx_wallets_wallet_address ON wallets(wallet_address)',
-    
+
     'CREATE INDEX idx_mining_sessions_user_id ON mining_sessions(user_id)',
     'CREATE INDEX idx_mining_sessions_session_id ON mining_sessions(session_id)',
     'CREATE INDEX idx_mining_sessions_start_time ON mining_sessions(start_time)',
     'CREATE INDEX idx_mining_sessions_is_active ON mining_sessions(is_active)',
-    
+
     'CREATE INDEX idx_mining_stats_user_id ON mining_stats(user_id)',
     'CREATE INDEX idx_mining_stats_date ON mining_stats(date)',
-    
+
     'CREATE INDEX idx_friends_user_id ON friends(user_id)',
     'CREATE INDEX idx_friends_friend_id ON friends(friend_id)',
-    
+
     'CREATE INDEX idx_transactions_user_id ON transactions(user_id)',
     'CREATE INDEX idx_transactions_transaction_id ON transactions(transaction_id)',
     'CREATE INDEX idx_transactions_type ON transactions(transaction_type)',
     'CREATE INDEX idx_transactions_created_at ON transactions(created_at)',
-    
+
     'CREATE INDEX idx_notifications_user_id ON notifications(user_id)',
     'CREATE INDEX idx_notifications_is_read ON notifications(is_read)',
-    
+
     'CREATE INDEX idx_news_cache_news_id ON news_cache(news_id)',
-    
+
     'CREATE INDEX idx_settings_user_id ON settings(user_id)',
     'CREATE INDEX idx_settings_key ON settings(setting_key)',
   ];
@@ -256,4 +256,3 @@ class LocalDatabaseSchema {
     'DROP TABLE IF EXISTS settings',
   ];
 }
-
