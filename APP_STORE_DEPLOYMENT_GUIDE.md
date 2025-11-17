@@ -201,7 +201,7 @@ git clone [URL-REPOSITORY]
 ```
 
 **Ví dụ:**
-- GitHub: `git clone https://github.com/huyhuyhuy/app_coinz.git
+- GitHub: git clone https://github.com/huyhuyhuy/app_coinz.git
 
 
 ### Bước 5.3: Chuyển vào thư mục project
