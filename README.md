@@ -221,5 +221,3 @@ For support and questions:
 - Advanced security features
 
 ---
-
-**App Coinz** - Building the future of community-driven coin mining! 🚀💰
