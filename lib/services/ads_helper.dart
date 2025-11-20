@@ -1,10 +1,22 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:io';
 
 class AdsHelper {
   static String get bannerAdUnitId {
-    // Production Banner Ad Unit ID
-    return 'ca-app-pub-4969810842586372/8184179176';
+    // Phân biệt iOS và Android
+    if (kIsWeb) {
+      // Web không hỗ trợ ads
+      return 'ca-app-pub-3940256099942544/6300978111'; // Test ID
+    }
+    
+    if (Platform.isIOS) {
+      // iOS Banner Ad ID
+      return 'ca-app-pub-4969810842586372/4839732476';
+    } else {
+      // Android Banner Ad ID
+      return 'ca-app-pub-4969810842586372/8184179176';
+    }
   }
 
   static String get interstitialAdUnitId {

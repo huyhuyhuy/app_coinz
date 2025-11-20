@@ -46,7 +46,7 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-4969810842586372~7884796278</string>
+	<string>ca-app-pub-4969810842586372~3969503931</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to take photos for your profile and KYC verification.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

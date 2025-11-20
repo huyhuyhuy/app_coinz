@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -14,8 +15,19 @@ class AppOpenAdManager {
   
   // ✅ Production Ad Unit ID cho App Open Ads
   static String get appOpenAdUnitId {
-    // Production ad unit ID
-    return 'ca-app-pub-4969810842586372/8233130697';
+    // Phân biệt iOS và Android
+    if (kIsWeb) {
+      // Web không hỗ trợ ads
+      return 'ca-app-pub-3940256099942544/3419835294'; // Test ID
+    }
+    
+    if (Platform.isIOS) {
+      // iOS App Open Ad ID
+      return 'ca-app-pub-4969810842586372/2268026569';
+    } else {
+      // Android App Open Ad ID
+      return 'ca-app-pub-4969810842586372/8233130697';
+    }
   }
   
   // ✅ Frequency: 4 giờ

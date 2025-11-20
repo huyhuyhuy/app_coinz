@@ -15,8 +15,9 @@ Hướng dẫn chi tiết từng bước cho người chưa từng dùng Mac Min
 7. [Cấu hình Signing trong Xcode](#7-cấu-hình-signing-trong-xcode)
 8. [Build App](#8-build-app)
 9. [Archive và Upload lên App Store Connect](#9-archive-và-upload-lên-app-store-connect)
-10. [Submit để Review](#10-submit-để-review)
-11. [Xử lý Lỗi Thường Gặp](#11-xử-lý-lỗi-thường-gặp)
+10. [Chuẩn bị Screenshots và Icon](#10-chuẩn-bị-screenshots-và-icon)
+11. [Submit để Review](#11-submit-để-review)
+12. [Xử lý Lỗi Thường Gặp](#12-xử-lý-lỗi-thường-gặp)
 
 ---
 
@@ -333,6 +334,9 @@ Sau khi build xong, bạn sẽ thấy:
 ✓ Built build/ios/iphoneos/Runner.app
 ```
 
+**LƯU Ý QUAN TRỌNG:**
+- File `.app` này là cho **iOS/App Store**
+
 ---
 
 ## 9. ARCHIVE VÀ UPLOAD LÊN APP STORE CONNECT
@@ -367,47 +371,398 @@ Sau khi Archive xong, cửa sổ **Organizer** sẽ tự động mở:
 1. Sau khi upload xong, bạn sẽ thấy thông báo **"Upload Successful"**
 2. Mở trình duyệt, truy cập: https://appstoreconnect.apple.com
 3. Đăng nhập bằng Apple ID Developer của bạn
-4. Vào **"My Apps"** → Tìm app **"DongFi"** (hoặc tạo mới nếu chưa có)
-5. Vào tab **"TestFlight"** hoặc **"App Store"**
+4. Vào **"My Apps"** → Kiểm tra xem app **"DongFi"** đã có chưa
+
+**LƯU Ý QUAN TRỌNG:**
+- Khi upload build lần đầu tiên, **Xcode có thể tự động tạo App record** trong App Store Connect
+- Nếu bạn thấy dialog "Upload for App Store Connect" với thông tin Name, SKU, Bundle ID → Xcode sẽ tự động tạo app record
+- Nếu app **"DongFi"** đã xuất hiện trong danh sách "My Apps" → App record đã được tạo tự động, bạn có thể **BỎ QUA bước 11.1**
+- Nếu app **chưa có** trong danh sách → Cần tạo thủ công ở bước 11.1
+
+5. Vào app **"DongFi"** → Tab **"TestFlight"** hoặc **"App Store"**
 6. Bạn sẽ thấy build vừa upload (có thể đang ở trạng thái "Processing")
 
 ---
 
-## 10. SUBMIT ĐỂ REVIEW
+## 10. CHUẨN BỊ SCREENSHOTS VÀ ICON
 
-### Bước 10.1: Tạo App trong App Store Connect (nếu chưa có)
+- **App Icon**: 1024x1024px (PNG, không trong suốt)
+- **Screenshots**: 5-10  screenshot cho iPhone
+
+### Bước 10.1: Chụp Screenshots từ iPhone Simulator
+
+#### Cách 1: Dùng Xcode Simulator (Khuyến nghị)
+
+1. **Mở Simulator:**
+   - Mở Simulator từ: **Xcode** → **Open Developer Tool** → **Simulator**
+   - hoặc chạy lệnh: open -a Simulator
+
+2. **Chạy app trên Simulator:**
+   - ở ternimal thư mục appcoinz chạy lệnh:
+   ```bash
+   flutter run
+   ```
+   - App sẽ mở trên Simulator
+
+-> chụp màn hình.
+
+#### Cách 2: Dùng iPhone thật
+
+1. **Cài app lên iPhone:**
+   - Cắm iPhone vào Mac Mini
+   - Trong Xcode, chọn device là iPhone của bạn
+   - Chạy app (`flutter run` hoặc click Run trong Xcode)
+
+2. **Chụp screenshot trên iPhone:**
+   - Nhấn nút Home + Power (hoặc Volume Up + Power trên iPhone X trở lên)
+   - Screenshot sẽ lưu vào Photos trên iPhone
+
+App Store yêu cầu screenshots cho các kích thước khác nhau:
+
+#### iPhone Screenshots (BẮT BUỘC):
+- **iPhone 6.7" (iPhone 14 Pro Max, 15 Pro Max)**: 1290 x 2796 pixels
+- **iPhone 6.5" (iPhone 11 Pro Max, XS Max)**: 1242 x 2688 pixels
+- **iPhone 5.5" (iPhone 8 Plus)**: 1242 x 2208 pixels
+
+**Lưu ý**: Bạn chỉ cần upload cho **một kích thước** (khuyến nghị: 6.7"), Apple sẽ tự động scale cho các kích thước khác.
+
+#### Cách resize screenshots:
+
+1. **Dùng Preview trên Mac:**
+   - Mở screenshot trong Preview
+   - **Tools** → **Adjust Size**
+   - Nhập kích thước mới (ví dụ: Width 1290, Height 2796)
+   - Chọn **Scale proportionally** (nếu cần)
+   - Click **OK**
+   - **File** → **Export** → Chọn PNG
+
+
+### Bước 10.5: Lưu trữ Screenshots và Icon
+
+Tạo một thư mục để lưu tất cả:
+
+```bash
+mkdir ~/Desktop/App_Store_Assets
+cd ~/Desktop/App_Store_Assets
+mkdir Screenshots
+mkdir Icon
+```
+
+- Copy icon vào: `Icon/app_icon_1024x1024.png`
+- Copy screenshots vào: `Screenshots/`
+
+**Đặt tên file rõ ràng:**
+- `screenshot_1_home.png`
+- `screenshot_2_tasks.png`
+- `screenshot_3_wallet.png`
+- `screenshot_4_profile.png`
+- `app_icon_1024x1024.png`
+
+---
+
+## 11. SUBMIT ĐỂ REVIEW
+
+### Bước 11.1: Kiểm tra App đã có trong App Store Connect chưa
+
+**QUAN TRỌNG:** Khi upload build ở bước 9, Xcode có thể đã tự động tạo App record trong App Store Connect. Bạn cần kiểm tra trước:
 
 1. Truy cập: https://appstoreconnect.apple.com
-2. Click **"My Apps"** → **"+"** → **"New App"**
-3. Điền thông tin:
-   - **Platform**: iOS
-   - **Name**: DongFi
-   - **Primary Language**: Vietnamese hoặc English
-   - **Bundle ID**: Chọn `com.dongfi.dfi` (phải match với Bundle ID trong Xcode)
-   - **SKU**: `dongfi-ios` (hoặc bất kỳ mã nào bạn muốn)
-4. Click **"Create"**
+2. Vào **"My Apps"**
+3. Kiểm tra xem app **"DongFi"** đã có trong danh sách chưa
 
-### Bước 10.2: Đợi build được process xong
-
-- Build vừa upload sẽ ở trạng thái **"Processing"** trong 10-30 phút
+có thể nó sẽ ở trạng thái **"Processing"** trong 10-30 phút
 - Sau khi xong, status sẽ đổi thành **"Ready to Submit"**
 
-### Bước 10.3: Điền thông tin App Store Listing
+### Bước 11.3: Điền thông tin App Store Listing
 
-1. Vào tab **"App Store"** trong App Store Connect
-2. Điền các thông tin bắt buộc:
-   - **App Name**: DongFi
-   - **Subtitle**: (tùy chọn)
-   - **Description**: Mô tả app của bạn
-   - **Keywords**: Từ khóa tìm kiếm
-   - **Support URL**: URL hỗ trợ
-   - **Marketing URL**: (tùy chọn)
-   - **Privacy Policy URL**: URL chính sách bảo mật (BẮT BUỘC)
-   - **Category**: Chọn danh mục phù hợp
-   - **App Icon**: Upload icon 1024x1024px
-   - **Screenshots**: Upload ít nhất 1 screenshot cho iPhone
+Bạn đang ở trang **"iOS App Version 1.0"** trong App Store Connect. Điền các thông tin sau theo thứ tự:
 
-### Bước 10.4: Chọn build và Submit
+---
+
+#### 1. PREVIEWS AND SCREENSHOTS (BẮT BUỘC)
+
+**Vị trí:** Phần đầu tiên trên trang, có tiêu đề "Previews and Screenshots"
+
+**Các bước:**
+
+1. **Chọn tab "iPhone"** (đã được chọn sẵn)
+2. **Chọn kích thước Display:**
+   - Click vào dropdown hiển thị **"iPhone 6.5" Display"**
+   - Chọn **"iPhone 6.5" Display"** (1242 x 2688px) - **KHUYẾN NGHỊ**
+   - Hoặc chọn kích thước khác nếu bạn đã resize screenshots theo kích thước đó
+
+3. **Upload Screenshots:**
+   - **Cách 1:** Kéo thả các file screenshot vào vùng "Drag up to 3 app previews and 10 screenshots here"
+   - **Cách 2:** Click **"Choose File"** → Chọn các file screenshot đã resize (chọn nhiều file cùng lúc bằng `Cmd + Click`)
+   - **Tối thiểu:** 1 screenshot
+   - **Khuyến nghị:** 3-5 screenshots
+   - **Tối đa:** 10 screenshots
+
+4. **Sắp xếp thứ tự:**
+   - Sau khi upload, bạn có thể kéo thả để sắp xếp lại thứ tự
+   - **Screenshot đầu tiên** sẽ hiển thị đầu tiên trên App Store
+   - **Khuyến nghị thứ tự:**
+     1. Màn hình Home/Trang chủ (đẹp nhất, thể hiện tính năng chính)
+     2. Màn hình Nhiệm vụ/Tasks
+     3. Màn hình Ví/Wallet
+     4. Màn hình Profile
+     5. Màn hình khác (nếu có)
+
+5. **Kiểm tra:**
+   - Đảm bảo screenshots hiển thị đúng
+   - Không có frame iPhone (Apple sẽ tự động thêm)
+   - Không có watermark, text overlay (trừ text trong app)
+   - Không có nút "Download", "Get", "Free"
+
+**Lưu ý:** App Previews (video) là tùy chọn, không bắt buộc. Bạn có thể bỏ qua phần này.
+
+---
+
+#### 2. PROMOTIONAL TEXT (TÙY CHỌN)
+
+**Vị trí:** Phần thứ hai, có tiêu đề "Promotional Text"
+
+**Mục đích:** Text này sẽ hiển thị ngay dưới app name trên App Store, dùng để quảng bá tính năng mới hoặc khuyến mãi.
+
+**Yêu cầu:**
+- Tối đa **170 ký tự**
+- Có thể để trống (không bắt buộc)
+- Có thể cập nhật bất cứ lúc nào mà không cần submit lại
+
+**Ví dụ điền:**
+```
+Kiếm DFI miễn phí mỗi ngày! Xem video, hoàn thành nhiệm vụ và nhận thưởng ngay.
+```
+Hoặc:
+```
+Ứng dụng khai thác coin miễn phí. Kiếm DFI, xem video, nhận thưởng hàng ngày.
+```
+
+**Bạn có thể:**
+- Điền ngay bây giờ
+- Hoặc để trống và điền sau
+
+---
+
+#### 3. DESCRIPTION (BẮT BUỘC)
+
+**Vị trí:** Phần thứ ba, có tiêu đề "Description"
+
+**Mục đích:** Mô tả chi tiết về app, tính năng, cách sử dụng.
+
+**Yêu cầu:**
+- Tối đa **4,000 ký tự**
+- **BẮT BUỘC** phải điền
+- Nên viết bằng tiếng Việt (vì Primary Language là Vietnamese)
+
+**Cấu trúc mô tả gợi ý:**
+
+```
+DongFi - Ứng dụng khai thác coin miễn phí
+
+DongFi là ứng dụng cho phép bạn kiếm DFI (DongFi Coin) miễn phí mỗi ngày thông qua các hoạt động đơn giản như xem video, hoàn thành nhiệm vụ và tham gia các hoạt động cộng đồng.
+
+✨ TÍNH NĂNG CHÍNH:
+
+💰 Kiếm DFI miễn phí
+- Xem video để nhận thưởng DFI
+- Hoàn thành nhiệm vụ hàng ngày
+- Nhận thưởng tự động vào ví
+
+📱 Quản lý ví tiện lợi
+- Theo dõi số dư DFI của bạn
+- Xem lịch sử giao dịch
+- Rút tiền dễ dàng
+
+🎯 Nhiệm vụ đa dạng
+- Xem video quảng cáo
+- Chia sẻ ứng dụng
+- Mời bạn bè tham gia
+
+👥 Hệ thống giới thiệu
+- Mời bạn bè và nhận thưởng
+- Theo dõi số người được giới thiệu
+- Nhận hoa hồng từ người được giới thiệu
+
+🔒 Bảo mật cao
+- Thông tin được mã hóa
+- Xác thực 2 lớp
+- Bảo vệ tài khoản an toàn
+
+📊 Thống kê chi tiết
+- Theo dõi thu nhập hàng ngày
+- Xem biểu đồ thống kê
+- Phân tích hiệu suất
+
+Tải ngay DongFi và bắt đầu kiếm DFI miễn phí ngay hôm nay!
+
+Lưu ý: Đây là ứng dụng giải trí, không phải đầu tư tài chính thực sự.
+```
+
+**Hoặc bạn có thể viết ngắn gọn hơn:**
+
+```
+DongFi - Ứng dụng khai thác coin miễn phí
+
+Kiếm DFI miễn phí mỗi ngày bằng cách:
+- Xem video quảng cáo
+- Hoàn thành nhiệm vụ
+- Mời bạn bè tham gia
+
+Quản lý ví DFI của bạn một cách dễ dàng và an toàn. Theo dõi số dư, lịch sử giao dịch và rút tiền khi cần.
+
+Tính năng:
+• Xem video nhận thưởng
+• Hoàn thành nhiệm vụ hàng ngày
+• Hệ thống giới thiệu bạn bè
+• Quản lý ví tiện lợi
+• Bảo mật cao
+
+Tải ngay và bắt đầu kiếm DFI miễn phí!
+```
+
+**Lưu ý:**
+- Viết bằng tiếng Việt (vì Primary Language là Vietnamese)
+- Sử dụng emoji để làm nổi bật (tùy chọn)
+- Liệt kê các tính năng chính
+- Không được có link, email, số điện thoại trong Description
+- Không được có text như "Download now", "Get it free"
+
+---
+
+#### 4. CÁC THÔNG TIN KHÁC (Scroll xuống để tìm)
+
+Sau khi điền 3 phần trên, scroll xuống để tìm và điền các thông tin sau:
+
+##### 4.1. Keywords (Từ khóa tìm kiếm)
+
+**Vị trí:** Scroll xuống, tìm phần "Keywords"
+
+**Yêu cầu:**
+- Tối đa **100 ký tự**
+- Các từ khóa cách nhau bằng **dấu phẩy** (không có khoảng trắng sau dấu phẩy)
+- **BẮT BUỘC** phải điền
+
+**Ví dụ điền:**
+```
+coin,mining,tiền điện tử,crypto,DFI,kiếm tiền,thưởng,ví,blockchain
+```
+
+Hoặc:
+```
+coin mining,crypto,DFI,kiếm tiền miễn phí,ví điện tử,blockchain,thưởng
+```
+
+**Lưu ý:**
+- Không được có khoảng trắng sau dấu phẩy
+- Không được trùng với tên app
+- Nên dùng từ khóa liên quan đến app
+
+##### 4.2. Support URL (URL hỗ trợ)
+
+**Vị trí:** Scroll xuống, tìm phần "Support URL"
+
+**Yêu cầu:**
+- **BẮT BUỘC** phải điền
+- Phải là URL hợp lệ (bắt đầu bằng `http://` hoặc `https://`)
+
+**Ví dụ điền:**
+```
+https://dongfi.com/support
+```
+
+Hoặc nếu chưa có website:
+```
+https://dongfi.com
+```
+
+**Lưu ý:** Nếu bạn chưa có website, có thể tạo một trang đơn giản hoặc dùng GitHub Pages.
+
+##### 4.3. Marketing URL (Tùy chọn)
+
+**Vị trí:** Scroll xuống, tìm phần "Marketing URL"
+
+**Yêu cầu:**
+- **TÙY CHỌN** (có thể để trống)
+- Nếu có, phải là URL hợp lệ
+
+**Ví dụ điền:**
+```
+https://dongfi.com
+```
+
+Hoặc để trống nếu chưa có.
+
+##### 4.4. Privacy Policy URL (BẮT BUỘC)
+
+**Vị trí:** Scroll xuống, tìm phần "Privacy Policy URL"
+
+**Yêu cầu:**
+- **BẮT BUỘC** phải điền
+- Phải là URL hợp lệ
+- Phải có trang Privacy Policy thực sự (không được để trống hoặc link lỗi)
+
+**Ví dụ điền:**
+```
+https://dongfi.com/privacy
+```
+
+**Lưu ý:** 
+- Nếu bạn chưa có Privacy Policy, cần tạo ngay. Có thể dùng:
+  - Công cụ tạo Privacy Policy online (ví dụ: https://www.privacypolicygenerator.info/)
+  - Hoặc tự viết và đăng lên website
+
+##### 4.5. Category (Danh mục)
+
+**Vị trí:** Scroll xuống, tìm phần "Category"
+
+**Yêu cầu:**
+- **BẮT BUỘC** phải chọn
+- Chọn **Primary Category** (danh mục chính)
+- Có thể chọn **Secondary Category** (danh mục phụ) - tùy chọn
+
+**Gợi ý chọn:**
+- **Primary Category:** Chọn **"Finance"** (Tài chính) hoặc **"Utilities"** (Tiện ích)
+- **Secondary Category:** Có thể chọn **"Entertainment"** (Giải trí) hoặc để trống
+
+**Cách chọn:**
+1. Click vào dropdown "Primary Category"
+2. Chọn **"Finance"** hoặc **"Utilities"**
+3. (Tùy chọn) Chọn Secondary Category
+
+##### 4.6. App Icon
+
+**Vị trí:** Scroll xuống, tìm phần "App Icon"
+
+**Yêu cầu:**
+- **BẮT BUỘC** phải upload
+- Kích thước: **1024 x 1024 pixels**
+- Định dạng: **PNG**
+- Không trong suốt (phải có background)
+
+**Các bước:**
+1. Click vào vùng upload App Icon
+2. Chọn file `app_icon_1024x1024.png` đã chuẩn bị ở bước 10.1
+3. Đợi upload xong (có thể mất 1-2 phút)
+4. Kiểm tra icon hiển thị đúng
+
+---
+
+#### 5. LƯU THÔNG TIN
+
+Sau khi điền xong tất cả các thông tin trên:
+
+1. Scroll lên đầu trang
+2. Click nút **"Save"** (màu xám, ở góc trên bên phải)
+3. Đợi lưu xong (có thể mất vài giây)
+4. Kiểm tra không có lỗi nào
+
+**Lưu ý:** 
+- Bạn có thể lưu và quay lại chỉnh sửa sau
+- Không cần điền hết tất cả ngay một lúc
+- Nhưng **phải điền đầy đủ** trước khi Submit để Review
+
+### Bước 11.4: Chọn build và Submit
 
 1. Scroll xuống phần **"Build"**
 2. Click **"+ Version or Platform"** → Chọn build vừa upload
@@ -421,7 +776,7 @@ Sau khi Archive xong, cửa sổ **Organizer** sẽ tự động mở:
 5. Click **"Add for Review"**
 6. Xác nhận và click **"Submit for Review"**
 
-### Bước 10.5: Theo dõi trạng thái Review
+### Bước 11.5: Theo dõi trạng thái Review
 
 - App sẽ ở trạng thái **"Waiting for Review"**
 - Apple sẽ review trong 1-3 ngày làm việc
@@ -429,9 +784,9 @@ Sau khi Archive xong, cửa sổ **Organizer** sẽ tự động mở:
 
 ---
 
-## 11. XỬ LÝ LỖI THƯỜNG GẶP
+## 12. XỬ LÝ LỖI THƯỜNG GẶP
 
-### Lỗi 11.1: "Command Line Tools not found"
+### Lỗi 12.1: "Command Line Tools not found"
 
 **Nguyên nhân**: Chưa cài đặt Command Line Tools
 
@@ -444,7 +799,7 @@ Sau đó làm lại bước 2.4.
 
 ---
 
-### Lỗi 11.2: "CocoaPods installation failed"
+### Lỗi 12.2: "CocoaPods installation failed"
 
 **Nguyên nhân**: Quyền truy cập hoặc Ruby version
 
@@ -462,7 +817,7 @@ brew install cocoapods
 
 ---
 
-### Lỗi 11.3: "No signing certificate found"
+### Lỗi 12.3: "No signing certificate found"
 
 **Nguyên nhân**: Chưa đăng nhập Apple ID trong Xcode hoặc Team chưa được chọn
 
@@ -475,7 +830,7 @@ brew install cocoapods
 
 ---
 
-### Lỗi 11.4: "Bundle identifier is already in use"
+### Lỗi 12.4: "Bundle identifier is already in use"
 
 **Nguyên nhân**: Bundle ID `com.dongfi.dfi` đã được sử dụng bởi app khác
 
@@ -486,7 +841,7 @@ brew install cocoapods
 
 ---
 
-### Lỗi 11.5: "Pod install failed"
+### Lỗi 12.5: "Pod install failed"
 
 **Nguyên nhân**: Lỗi khi cài đặt CocoaPods dependencies
 
@@ -505,7 +860,7 @@ brew install cocoapods
 
 ---
 
-### Lỗi 11.6: "Flutter doctor shows issues"
+### Lỗi 12.6: "Flutter doctor shows issues"
 
 **Nguyên nhân**: Một số components chưa được cài đặt đầy đủ
 
@@ -522,7 +877,7 @@ Xem chi tiết lỗi và làm theo hướng dẫn. Thường thì:
 
 ---
 
-### Lỗi 11.7: "Archive failed" hoặc "Build failed"
+### Lỗi 12.7: "Archive failed" hoặc "Build failed"
 
 **Nguyên nhân**: Lỗi trong code hoặc cấu hình
 
@@ -542,7 +897,7 @@ Xem chi tiết lỗi và làm theo hướng dẫn. Thường thì:
 
 ---
 
-### Lỗi 11.8: "Upload failed" - Invalid Bundle
+### Lỗi 12.8: "Upload failed" - Invalid Bundle
 
 **Nguyên nhân**: Thiếu thông tin trong Info.plist hoặc cấu hình sai
 
@@ -560,6 +915,7 @@ Xem chi tiết lỗi và làm theo hướng dẫn. Thường thì:
 
 Trước khi submit app lên App Store, đảm bảo:
 
+### Build và Upload:
 - ✅ Xcode đã cài đặt và cấu hình đúng
 - ✅ Flutter đã cài đặt và trong PATH
 - ✅ CocoaPods đã cài đặt
@@ -569,10 +925,21 @@ Trước khi submit app lên App Store, đảm bảo:
 - ✅ App đã build thành công (`flutter build ios --release`)
 - ✅ Archive đã tạo thành công trong Xcode
 - ✅ Upload lên App Store Connect thành công
-- ✅ Thông tin App Store Listing đã điền đầy đủ
-- ✅ Privacy Policy URL đã có (BẮT BUỘC)
-- ✅ App Icon 1024x1024px đã upload
-- ✅ Screenshots đã upload (ít nhất 1 cái)
+- ✅ Build đã được process xong (status: "Ready to Submit")
+
+### App Store Listing:
+- ✅ Thông tin App Store Listing đã điền đầy đủ:
+  - ✅ App Name
+  - ✅ Description
+  - ✅ Keywords
+  - ✅ Support URL
+  - ✅ Privacy Policy URL (BẮT BUỘC)
+  - ✅ Category đã chọn
+- ✅ App Icon 1024x1024px đã upload và hiển thị đúng
+- ✅ Screenshots đã upload (ít nhất 1 cái, khuyến nghị 3-5)
+- ✅ Screenshots đúng kích thước và không vi phạm quy tắc
+- ✅ Version Information đã điền (What's New)
+- ✅ App Review Information đã điền (Contact, Demo Account nếu cần)
 
 ---
 

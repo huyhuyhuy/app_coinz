@@ -1,11 +1,12 @@
-app open ad
-ca-app-pub-4969810842586372/8233130697
+Dành cho android:
+ID app: ca-app-pub-4969810842586372~7884796278
+app open ad: ca-app-pub-4969810842586372/8233130697
+banner ad: ca-app-pub-4969810842586372/8184179176
 
-banner ad:
-ca-app-pub-4969810842586372/8184179176
-
-ID app:
-ca-app-pub-4969810842586372~7884796278
+Dành cho IOS:
+ID app: ca-app-pub-4969810842586372~3969503931
+app open ad: ca-app-pub-4969810842586372/2268026569
+banner ad: ca-app-pub-4969810842586372/4839732476
 
 # App Coinz - Flutter Coin Mining App
 
