@@ -314,20 +314,36 @@ Tất cả các mục nên hiển thị ✅ (hoặc ít nhất Xcode và CocoaPo
 
 ## 8. BUILD APP
 
-### Bước 8.1: Build bằng Flutter (Khuyến nghị)
+### Bước 8.1: Kiểm tra và tăng Version/Build Number (QUAN TRỌNG)
+
+**TRƯỚC KHI BUILD**, bạn cần kiểm tra version trong `pubspec.yaml`:
+
+1. Mở file `pubspec.yaml`
+2. Tìm dòng `version: X.X.X+X` (ví dụ: `version: 1.0.3+4`)
+3. **Tăng build number** (số sau dấu `+`) để App Store Connect nhận build mới:
+   - Ví dụ: `1.0.3+4` → `1.0.3+5`
+   - Hoặc tăng version: `1.0.3+4` → `1.0.4+1`
+
+**Lưu ý:** Nếu upload build mới với cùng version/build number, App Store Connect có thể từ chối hoặc không cập nhật.
+
+### Bước 8.2: Build bằng Flutter (Khuyến nghị)
 
 Trong Terminal, đảm bảo đang ở thư mục `app_coinz/app_coinz`, chạy:
 ```bash
+flutter clean
+flutter pub get
 flutter build ios --release
 ```
 
 Lệnh này sẽ:
-- Build app ở chế độ release
+- Xóa cache cũ (`flutter clean`)
+- Cài lại dependencies (`flutter pub get`)
+- Build app ở chế độ release (`flutter build ios --release`)
 - Tạo file `.app` trong `build/ios/iphoneos/`
 
 **Lưu ý**: Build lần đầu sẽ mất 5-10 phút.
 
-### Bước 8.2: Kiểm tra build thành công
+### Bước 8.3: Kiểm tra build thành công
 
 Sau khi build xong, bạn sẽ thấy:
 ```
@@ -336,6 +352,7 @@ Sau khi build xong, bạn sẽ thấy:
 
 **LƯU Ý QUAN TRỌNG:**
 - File `.app` này là cho **iOS/App Store**
+- Đảm bảo version/build number đã được tăng trước khi build
 
 ---
 
@@ -765,7 +782,9 @@ Sau khi điền xong tất cả các thông tin trên:
 ### Bước 11.4: Chọn build và Submit
 
 1. Scroll xuống phần **"Build"**
-2. Click **"+ Version or Platform"** → Chọn build vừa upload
+2. Click **"+ Version or Platform"** → Chọn build vừa upload (build mới nhất)
+   - **Lưu ý:** Nếu có nhiều builds, chọn build mới nhất (có ngày giờ upload gần nhất)
+   - Build cũ sẽ vẫn còn trong danh sách nhưng không được sử dụng
 3. Điền thông tin **"Version Information"**:
    - **Version**: `1.0.3` (hoặc version hiện tại trong `pubspec.yaml`)
    - **What's New in This Version**: Mô tả các thay đổi
@@ -775,6 +794,12 @@ Sau khi điền xong tất cả các thông tin trên:
    - **Notes**: Ghi chú cho reviewer (nếu cần)
 5. Click **"Add for Review"**
 6. Xác nhận và click **"Submit for Review"**
+
+**Lưu ý quan trọng về Builds:**
+- Build cũ **KHÔNG tự động xóa** và **KHÔNG cần xóa bằng tay**
+- Khi upload build mới, bạn chỉ cần **chọn build mới** trong dropdown "Build"
+- Build cũ sẽ vẫn còn trong danh sách nhưng không được sử dụng
+- **Tất cả thông tin đã điền** (Description, Screenshots, Keywords, etc.) **KHÔNG mất** - đó là metadata của app, không phải của build
 
 ### Bước 11.5: Theo dõi trạng thái Review
 
