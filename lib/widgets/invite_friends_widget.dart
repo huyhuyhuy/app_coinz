@@ -94,8 +94,8 @@ class _InviteFriendsWidgetState extends State<InviteFriendsWidget> {
             Expanded(
               child: Text(
                 localizations.locale.languageCode == 'vi'
-                    ? 'Mời bạn bè để tăng tốc độ khai thác'
-                    : 'Invite friends to boost mining speed',
+                    ? 'Mời bạn bè để tăng tốc độ kiếm điểm'
+                    : 'Invite friends to boost earning rate',
                 style: GoogleFonts.roboto(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -304,8 +304,8 @@ class _InviteFriendsWidgetState extends State<InviteFriendsWidget> {
                   onPressed: () {
                     // TODO: Implement share functionality
                     final message = localizations.locale.languageCode == 'vi'
-                        ? 'Tham gia DFI và khai thác miễn phí! Sử dụng mã giới thiệu: $referralCode'
-                        : 'Join DFI and mine for free! Use referral code: $referralCode';
+                        ? 'Tham gia DFI và kiếm điểm miễn phí! Sử dụng mã giới thiệu: $referralCode'
+                        : 'Join DFI and earn points for free! Use referral code: $referralCode';
                     
                     Clipboard.setData(ClipboardData(text: message));
                     ScaffoldMessenger.of(context).showSnackBar(
