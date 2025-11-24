@@ -172,13 +172,13 @@ class TransactionModel {
   String get typeDisplay {
     switch (transactionType) {
       case 'mining':
-        return 'Mining Reward';
+        return 'Earning Reward';
       case 'referral':
         return 'Referral Bonus';
       case 'transfer_send':
-        return 'Transfer Sent';
+        return 'Points Sent';
       case 'transfer_receive':
-        return 'Transfer Received';
+        return 'Points Received';
       case 'withdrawal':
         return 'Withdrawal';
       default:

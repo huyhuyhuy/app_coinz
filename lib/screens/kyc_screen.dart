@@ -109,8 +109,8 @@ class _KYCScreenState extends State<KYCScreen> {
         SnackBar(
           content: Text(
             localizations.locale.languageCode == 'vi'
-                ? '${localizations.comingSoon} - Chức năng KYC đang được phát triển'
-                : '${localizations.comingSoon} - KYC feature under development',
+                ? '${localizations.comingSoon} - Chức năng xác minh rút tiền đang được phát triển'
+                : '${localizations.comingSoon} - Withdrawal verification feature under development',
           ),
           backgroundColor: Colors.orange,
           duration: const Duration(seconds: 3),
@@ -139,7 +139,18 @@ class _KYCScreenState extends State<KYCScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Info
+              // Header Info - Title
+              Text(
+                localizations.withdrawalVerificationTitle,
+                style: GoogleFonts.roboto(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Header Info - Description
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -148,14 +159,13 @@ class _KYCScreenState extends State<KYCScreen> {
                   border: Border.all(color: Colors.blue.shade200),
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(Icons.info_outline, color: Colors.blue.shade700),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        localizations.locale.languageCode == 'vi'
-                            ? 'Vui lòng điền đầy đủ thông tin để xác minh danh tính.'
-                            : 'Please fill in all information for identity verification.',
+                        localizations.withdrawalVerificationDescription,
                         style: GoogleFonts.roboto(
                           fontSize: 13,
                           color: Colors.blue.shade700,

@@ -9,10 +9,10 @@ import '../../utils/app_localizations.dart';
 import '../../repositories/transaction_repository.dart';
 import '../../models/models.dart';
 
-/// Category cho transactions
+/// Category cho activities
 enum TransactionCategory {
   all,      // Tất cả loại
-  transfer, // Chỉ chuyển/nhận nội bộ (transfer_send, transfer_receive, withdrawal)
+  transfer, // Chỉ gửi/nhận điểm (transfer_send, transfer_receive, withdrawal)
   earnings, // Chỉ thu nhập (mining, video_reward, referral)
 }
 
@@ -58,8 +58,8 @@ class _WalletTabState extends State<WalletTab> {
       SnackBar(
         content: Text(
           AppLocalizations.of(context).locale.languageCode == 'vi'
-              ? 'Đã sao chép địa chỉ ví'
-              : 'Wallet address copied',
+              ? 'Đã sao chép địa chỉ điểm'
+              : 'Points address copied',
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -353,13 +353,13 @@ class _WalletTabState extends State<WalletTab> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // BNB Transfer Button (Coming Soon)
+                  // External Transfer Button (Coming Soon)
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: null,
-                      icon: const Icon(Icons.currency_bitcoin, size: 20),
+                      icon: const Icon(Icons.send, size: 20),
                       label: Text(
-                        '${localizations.transferToBNB}\n(${localizations.comingSoon} + KYC)',
+                        '${localizations.transferToBNB}\n(${localizations.comingSoon})',
                         style: GoogleFonts.roboto(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -398,8 +398,8 @@ class _WalletTabState extends State<WalletTab> {
                         children: [
                           Text(
                             localizations.locale.languageCode == 'vi'
-                                ? 'Lịch sử giao dịch'
-                                : 'Transaction History',
+                                ? 'Lịch sử hoạt động'
+                                : 'Activity History',
                             style: GoogleFonts.roboto(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -476,8 +476,8 @@ class _WalletTabState extends State<WalletTab> {
                               const SizedBox(height: 16),
                               Text(
                                 localizations.locale.languageCode == 'vi'
-                                    ? 'Chưa có giao dịch'
-                                    : 'No transactions yet',
+                                    ? 'Chưa có hoạt động'
+                                    : 'No activities yet',
                                 style: GoogleFonts.roboto(
                                   fontSize: 16,
                                   color: Colors.grey[600],
@@ -509,7 +509,7 @@ class _WalletTabState extends State<WalletTab> {
     );
   }
 
-  /// Load transactions từ database
+  /// Load activities từ database
   Future<List<TransactionModel>> _loadTransactions(String userId) async {
     if (userId.isEmpty) return [];
     
@@ -518,28 +518,28 @@ class _WalletTabState extends State<WalletTab> {
       await _transactionRepo.syncTransactionsFromServer(userId);
       
       // ⚠️ KHÔNG gọi cleanup ở đây nữa - để UI tự handle deduplication
-      // Lý do: Cleanup có thể xóa nhầm transactions hợp lệ
+      // Lý do: Cleanup có thể xóa nhầm activities hợp lệ
       // UI deduplication an toàn hơn vì chỉ ẩn, không xóa
       
-      // Load từ local (tăng limit lên để load nhiều transactions hơn)
+      // Load từ local (tăng limit lên để load nhiều activities hơn)
       final transactions = await _transactionRepo.getUserTransactions(userId, limit: 500);
       
-      print('[WALLET_TAB] 📥 Loaded ${transactions.length} transactions from local database');
+      print('[WALLET_TAB] 📥 Loaded ${transactions.length} activities from local database');
       
       return transactions;
     } catch (e) {
-      print('[WALLET_TAB] ❌ Error loading transactions: $e');
+      print('[WALLET_TAB] ❌ Error loading activities: $e');
       return [];
     }
   }
 
-  /// Remove duplicate transactions (ONLY real duplicates - same timestamp to the minute)
+  /// Remove duplicate activities (ONLY real duplicates - same timestamp to the minute)
   List<TransactionModel> _removeDuplicateTransactions(List<TransactionModel> transactions) {
     final Map<String, TransactionModel> uniqueTransactions = {};
     
     for (final transaction in transactions) {
       // ✅ Create unique key: type + description + amount + timestamp (to the MINUTE)
-      // This ensures we only hide REAL duplicates (same transaction at same time)
+      // This ensures we only hide REAL duplicates (same activity at same time)
       final timestampToMinute = transaction.createdAt.toIso8601String().substring(0, 16); // YYYY-MM-DDTHH:MM
       final uniqueKey = '${transaction.transactionType}_${transaction.description}_${transaction.amount}_$timestampToMinute';
       
@@ -547,20 +547,20 @@ class _WalletTabState extends State<WalletTab> {
       if (!uniqueTransactions.containsKey(uniqueKey)) {
         uniqueTransactions[uniqueKey] = transaction;
       } else {
-        print('[WALLET_TAB] ⚠️ UI: Found duplicate transaction: ${transaction.transactionId} - ${transaction.description} - $timestampToMinute');
+        print('[WALLET_TAB] ⚠️ UI: Found duplicate activity: ${transaction.transactionId} - ${transaction.description} - $timestampToMinute');
       }
     }
     
     final deduplicatedList = uniqueTransactions.values.toList();
     
     if (transactions.length != deduplicatedList.length) {
-      print('[WALLET_TAB] 🔄 UI: Filtered ${transactions.length - deduplicatedList.length} duplicate transactions');
+      print('[WALLET_TAB] 🔄 UI: Filtered ${transactions.length - deduplicatedList.length} duplicate activities');
     }
     
     return deduplicatedList;
   }
 
-  /// ✅ Filter transactions theo CATEGORY only
+  /// ✅ Filter activities theo CATEGORY only
   List<TransactionModel> _filterTransactions(List<TransactionModel> transactions) {
     // Filter by CATEGORY
     if (_currentCategory == TransactionCategory.all) {
@@ -778,7 +778,7 @@ class _WalletTabState extends State<WalletTab> {
     
     switch (transaction.transactionType) {
       case 'mining':
-        return isVi ? 'Phần thưởng khai thác' : 'Mining Reward';
+        return isVi ? 'Phần thưởng kiếm điểm' : 'Earning Reward';
       
       case 'referral':
         return isVi ? 'Thưởng giới thiệu bạn bè' : 'Referral Bonus';
@@ -786,12 +786,12 @@ class _WalletTabState extends State<WalletTab> {
       case 'transfer_receive':
         return transaction.description.isNotEmpty
             ? transaction.description
-            : (isVi ? 'Nhận chuyển khoản' : 'Received Transfer');
+            : (isVi ? 'Nhận điểm' : 'Received Points');
       
       case 'transfer_send':
         return transaction.description.isNotEmpty
             ? transaction.description
-            : (isVi ? 'Gửi chuyển khoản' : 'Sent Transfer');
+            : (isVi ? 'Gửi điểm' : 'Sent Points');
       
       case 'video_reward':
         return isVi ? 'Thưởng xem video' : 'Video Reward';

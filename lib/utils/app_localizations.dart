@@ -149,9 +149,9 @@ class AppLocalizations {
   String get wallet {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Ví';
+        return 'Điểm';
       default:
-        return 'Wallet';
+        return 'Points';
     }
   }
 
@@ -182,22 +182,22 @@ class AppLocalizations {
     }
   }
 
-  // Mining Stats
+  // Earning Stats
   String get coinsMined {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Đã khai thác';
+        return 'Đã kiếm được';
       default:
-        return 'Mined';
+        return 'Earned';
     }
   }
 
   String get miningSpeed {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Tốc độ khai thác';
+        return 'Tốc độ kiếm điểm';
       default:
-        return 'Mining Speed';
+        return 'Points Rate';
     }
   }
 
@@ -251,18 +251,18 @@ class AppLocalizations {
   String get startMining {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Bắt đầu khai thác';
+        return 'Bắt đầu kiếm điểm';
       default:
-        return 'Start Mining';
+        return 'Start Earning';
     }
   }
 
   String get stopMining {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Dừng khai thác';
+        return 'Dừng kiếm điểm';
       default:
-        return 'Stop Mining';
+        return 'Stop Earning';
     }
   }
 
@@ -296,9 +296,9 @@ class AppLocalizations {
   String get miningHistory {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Lịch sử khai thác';
+        return 'Lịch sử kiếm điểm';
       default:
-        return 'Mining History';
+        return 'Earning History';
     }
   }
 
@@ -314,27 +314,27 @@ class AppLocalizations {
   String get noTransactions {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Chưa có giao dịch';
+        return 'Chưa có hoạt động';
       default:
-        return 'No transactions yet';
+        return 'No activities yet';
     }
   }
 
   String get totalCoinsMined {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Tổng DFI đã khai thác';
+        return 'Tổng DFI đã kiếm được';
       default:
-        return 'Total DFI Mined';
+        return 'Total DFI Earned';
     }
   }
 
   String get totalMiningTime {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Tổng thời gian khai thác';
+        return 'Tổng thời gian kiếm điểm';
       default:
-        return 'Total Mining Time';
+        return 'Total Earning Time';
     }
   }
 
@@ -539,18 +539,18 @@ class AppLocalizations {
   String get pleaseLoginToStartMining {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Vui lòng đăng nhập để bắt đầu khai thác';
+        return 'Vui lòng đăng nhập để bắt đầu kiếm điểm';
       default:
-        return 'Please login to start mining';
+        return 'Please login to start earning';
     }
   }
 
   String get miningActive {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Đang khai thác';
+        return 'Đang kiếm điểm';
       default:
-        return 'Mining Active';
+        return 'Earning Active';
     }
   }
 
@@ -559,7 +559,7 @@ class AppLocalizations {
       case 'vi':
         return 'Đã dừng';
       default:
-        return 'Mining Stopped';
+        return 'Earning Stopped';
     }
   }
 
@@ -584,9 +584,9 @@ class AppLocalizations {
   String get walletBalance {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Số dư ví';
+        return 'Số điểm';
       default:
-        return 'Wallet Balance';
+        return 'Points Balance';
     }
   }
 
@@ -602,27 +602,27 @@ class AppLocalizations {
   String get miningTips {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Mẹo khai thác';
+        return 'Mẹo kiếm điểm';
       default:
-        return 'Mining Tips';
+        return 'Earning Tips';
     }
   }
 
   String get miningTip1 {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Khai thác mỗi ngày để thu thập nhiều DFI';
+        return 'Kiếm điểm mỗi ngày để thu thập nhiều DFI';
       default:
-        return 'Mine daily to increase your DFI';
+        return 'Earn daily to increase your DFI';
     }
   }
 
   String get miningTip2 {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Mời bạn bè để tăng tốc độ khai thác';
+        return 'Mời bạn bè để tăng tốc độ kiếm điểm';
       default:
-        return 'Invite friends to boost mining speed';
+        return 'Invite friends to boost earning rate';
     }
   }
 
@@ -683,27 +683,27 @@ class AppLocalizations {
   String get transferInternal {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Chuyển nội bộ';
+        return 'Gửi điểm';
       default:
-        return 'Internal Transfer';
+        return 'Send Points';
     }
   }
 
   String get transferToBNB {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Chuyển qua BNB';
+        return 'Chuyển ra ngoài';
       default:
-        return 'Transfer to BNB';
+        return 'External Transfer';
     }
   }
 
   String get recipientWalletAddress {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Địa chỉ ví người nhận';
+        return 'Địa chỉ điểm người nhận';
       default:
-        return 'Recipient Wallet Address';
+        return 'Recipient Points Address';
     }
   }
 
@@ -773,18 +773,18 @@ class AppLocalizations {
   String get transferSuccessful {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Chuyển coin thành công';
+        return 'Gửi điểm thành công';
       default:
-        return 'Transfer successful';
+        return 'Points sent successfully';
     }
   }
 
   String get transferFailed {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Chuyển coin thất bại';
+        return 'Gửi điểm thất bại';
       default:
-        return 'Transfer failed';
+        return 'Failed to send points';
     }
   }
 
@@ -800,9 +800,9 @@ class AppLocalizations {
   String get invalidWalletAddress {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Địa chỉ ví không hợp lệ';
+        return 'Địa chỉ điểm không hợp lệ';
       default:
-        return 'Invalid wallet address';
+        return 'Invalid points address';
     }
   }
 
@@ -818,9 +818,9 @@ class AppLocalizations {
   String get pleaseEnterWalletAddress {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Vui lòng nhập địa chỉ ví';
+        return 'Vui lòng nhập địa chỉ điểm';
       default:
-        return 'Please enter wallet address';
+        return 'Please enter points address';
     }
   }
 
@@ -926,18 +926,18 @@ class AppLocalizations {
   String get kyc {
     switch (locale.languageCode) {
       case 'vi':
-        return 'KYC';
+        return 'Xác minh rút tiền';
       default:
-        return 'KYC';
+        return 'Withdrawal Verification';
     }
   }
 
   String get kycVerification {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Xác minh danh tính';
+        return 'Xác minh rút tiền';
       default:
-        return 'Identity Verification';
+        return 'Withdrawal Verification';
     }
   }
 
@@ -1043,9 +1043,27 @@ class AppLocalizations {
   String get kycInformation {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Thông tin KYC';
+        return 'Thông tin xác minh rút tiền';
       default:
-        return 'KYC Information';
+        return 'Withdrawal Verification Information';
+    }
+  }
+
+  String get withdrawalVerificationDescription {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Để rút điểm thưởng vào tài khoản ngân hàng của bạn, chúng tôi cần xác minh danh tính của bạn';
+      default:
+        return 'To withdraw your reward points to your bank account, we need to verify your identity';
+    }
+  }
+
+  String get withdrawalVerificationTitle {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Xác minh danh tính để kích hoạt rút tiền';
+      default:
+        return 'Verify your identity to enable bank withdrawals';
     }
   }
 

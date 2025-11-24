@@ -195,7 +195,7 @@ class MiningRepository {
       // Add coins to wallet
       await _walletRepo.addCoins(userId, coinsMined);
       
-      // ✅ Tạo transaction record cho mining reward
+      // ✅ Tạo transaction record cho earning reward
       if (coinsMined > 0) {
         final transaction = TransactionModel(
           transactionId: _generateUuid(),
