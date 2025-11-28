@@ -182,8 +182,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       Expanded(
                         child: Text(
                           localizations.locale.languageCode == 'vi'
-                              ? '⚠️ Vui lòng nhập TÊN THẬT khớp với CMND/CCCD của bạn. Tên này sẽ được dùng để đổi thưởng.'
-                              : '⚠️ Please enter your REAL NAME matching your ID card. This will be used for withdraw reward.',
+                              ? ' Vui lòng nhập TÊN THẬT khớp với CMND/CCCD của bạn.'
+                              : ' Please enter your REAL NAME matching your ID card.',
                           style: GoogleFonts.roboto(
                             fontSize: 12,
                             color: Colors.orange.shade900,

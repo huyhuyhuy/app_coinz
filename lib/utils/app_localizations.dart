@@ -149,9 +149,9 @@ class AppLocalizations {
   String get wallet {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Điểm';
+        return 'DFI';
       default:
-        return 'Points';
+        return 'DFI';
     }
   }
 
@@ -926,18 +926,18 @@ class AppLocalizations {
   String get kyc {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Xác minh rút tiền';
+        return 'Xác minh tài khoản';
       default:
-        return 'Withdrawal Verification';
+        return 'Account Verification';
     }
   }
 
   String get kycVerification {
     switch (locale.languageCode) {
       case 'vi':
-        return 'Xác minh rút tiền';
+        return 'Xác minh tài khoản';
       default:
-        return 'Withdrawal Verification';
+        return 'Account Verification';
     }
   }
 

@@ -31,17 +31,58 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
     super.initState();
+    // Đăng ký observer để lắng nghe AppLifecycleState
+    WidgetsBinding.instance.addObserver(this);
     // Check và hiển thị thông báo sau khi UI đã render xong
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndShowNotification();
     });
+  }
+
+  @override
+  void dispose() {
+    // Hủy đăng ký observer
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final miningProvider = Provider.of<MiningProvider>(context, listen: false);
+    final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+
+    if (authProvider.userId == null) return;
+
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        // App is going to background - stop mining
+        if (miningProvider.isMining) {
+          print('[MAIN_SCREEN] 🛑 App going to background - stopping mining');
+          miningProvider.stopMining(authProvider.userId!).then((_) {
+            walletProvider.refresh(authProvider.userId!);
+          });
+        }
+        break;
+      case AppLifecycleState.resumed:
+        // App is back to foreground - no auto restart
+        print('[MAIN_SCREEN] ▶️ App resumed - mining will not auto-restart');
+        break;
+      case AppLifecycleState.hidden:
+        // App is hidden but still running
+        break;
+    }
   }
 
   /// Check và hiển thị thông báo nếu có
@@ -920,20 +961,27 @@ class _ProfileTabState extends State<ProfileTab> {
           ),
           const SizedBox(height: 20),
           ListTile(
-            leading: const Icon(Icons.verified_user),
-            title: Text(localizations.kyc),
+            leading: Icon(
+              Icons.verified_user,
+              color: Colors.grey[400],
+            ),
+            title: Text(
+              localizations.kyc,
+              style: TextStyle(
+                color: Colors.grey[600],
+              ),
+            ),
             subtitle: Text(
               localizations.kycVerification,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
             ),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const KYCScreen(),
-                ),
-              );
-            },
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey[400],
+            ),
+            enabled: false,
+            onTap: null,
           ),
           ListTile(
             leading: const Icon(Icons.contact_mail),
