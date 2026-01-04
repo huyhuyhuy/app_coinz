@@ -1,3 +1,34 @@
+### Bước 4: Chạy emulator
+```powershell
+# Xem danh sách emulators
+flutter emulators
+
+# Chạy emulator 7 inch
+flutter emulators --launch Tablet_7inch
+
+# Chạy emulator 10 inch
+flutter emulators --launch Tablet_10inch
+```
+
+### Bước 5: Chạy app và chụp ảnh
+```powershell
+# Chạy app trên emulator 7 inch
+flutter run -d Tablet_7inch
+hoặc dùng id: flutter run -d emulator-5554
+
+# Trong terminal khác, chụp màn hình
+flutter screenshot screenshot_7inch.png
+
+# Chạy app trên emulator 10 inch
+flutter run -d Tablet_10inch
+
+# Chụp màn hình
+flutter screenshot screenshot_10inch.png
+```
+
+
+
+
 Dành cho android:
 ID app: ca-app-pub-4969810842586372~7884796278
 app open ad: ca-app-pub-4969810842586372/8233130697
