@@ -960,29 +960,30 @@ class _ProfileTabState extends State<ProfileTab> {
             },
           ),
           const SizedBox(height: 20),
-          ListTile(
-            leading: Icon(
-              Icons.verified_user,
-              color: Colors.grey[400],
-            ),
-            title: Text(
-              localizations.kyc,
-              style: TextStyle(
-                color: Colors.grey[600],
-              ),
-            ),
-            subtitle: Text(
-              localizations.kycVerification,
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.grey[400],
-            ),
-            enabled: false,
-            onTap: null,
-          ),
+          // ✅ HIDDEN: Account Verification Button (disabled) - Rejected by Apple
+          // ListTile(
+          //   leading: Icon(
+          //     Icons.verified_user,
+          //     color: Colors.grey[400],
+          //   ),
+          //   title: Text(
+          //     localizations.kyc,
+          //     style: TextStyle(
+          //       color: Colors.grey[600],
+          //     ),
+          //   ),
+          //   subtitle: Text(
+          //     localizations.kycVerification,
+          //     style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          //   ),
+          //   trailing: Icon(
+          //     Icons.arrow_forward_ios,
+          //     size: 16,
+          //     color: Colors.grey[400],
+          //   ),
+          //   enabled: false,
+          //   onTap: null,
+          // ),
           ListTile(
             leading: const Icon(Icons.contact_mail),
             title: Text(localizations.contact),

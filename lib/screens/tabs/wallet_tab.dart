@@ -327,56 +327,52 @@ class _WalletTabState extends State<WalletTab> {
               const SizedBox(height: 20),
 
               // Transfer Buttons
-              Row(
-                children: [
-                  // Internal Transfer Button
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showInternalTransferDialog(context),
-                      icon: const Icon(Icons.swap_horiz, size: 20),
-                      label: Text(
-                        localizations.transferInternal,
-                        style: GoogleFonts.roboto(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+              // Internal Transfer Button
+              ElevatedButton.icon(
+                onPressed: () => _showInternalTransferDialog(context),
+                icon: const Icon(Icons.swap_horiz, size: 20),
+                label: Text(
+                  localizations.transferInternal,
+                  style: GoogleFonts.roboto(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(width: 12),
-                  // External Transfer Button (Coming Soon)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: null,
-                      icon: const Icon(Icons.send, size: 20),
-                      label: Text(
-                        '${localizations.transferToBNB}\n(${localizations.comingSoon})',
-                        style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                  textAlign: TextAlign.center,
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
+                  minimumSize: const Size(double.infinity, 50),
+                ),
               ),
+              
+              // ✅ HIDDEN: External Transfer Button (Coming Soon) - Rejected by Apple
+              // const SizedBox(width: 12),
+              // Expanded(
+              //   child: ElevatedButton.icon(
+              //     onPressed: null,
+              //     icon: const Icon(Icons.send, size: 20),
+              //     label: Text(
+              //       '${localizations.transferToBNB}\n(${localizations.comingSoon})',
+              //       style: GoogleFonts.roboto(
+              //         fontSize: 12,
+              //         fontWeight: FontWeight.w600,
+              //       ),
+              //       textAlign: TextAlign.center,
+              //       maxLines: 2,
+              //     ),
+              //     style: ElevatedButton.styleFrom(
+              //       padding: const EdgeInsets.symmetric(vertical: 12),
+              //       shape: RoundedRectangleBorder(
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //     ),
+              //   ),
+              // ),
               
               const SizedBox(height: 24),
 
