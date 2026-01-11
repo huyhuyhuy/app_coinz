@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/repositories.dart';
 import '../models/models.dart';
 import '../database/database_helper.dart';
+import '../services/supabase_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final UserRepository _userRepo = UserRepository();
@@ -346,6 +347,41 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Xóa tài khoản người dùng (yêu cầu của Apple - data deletion)
+  Future<bool> deleteAccount() async {
+    if (_userId == null) {
+      print('[AUTH_PROVIDER] ❌ Cannot delete: userId is null');
+      return false;
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      print('[AUTH_PROVIDER] 🗑️ Deleting account: $_userId');
+
+      // Xóa user từ Supabase bằng cách xóa theo id (primary key)
+      // Cascade delete sẽ tự động xóa các bảng liên quan (transactions, referrals, mining_history...)
+      final response = await SupabaseService.client
+          .from('users')
+          .delete()
+          .eq('id', _userId!);
+
+      print('[AUTH_PROVIDER] ✅ Account deleted from server. Response: $response');
+
+      // Logout để clear local data
+      await logout();
+
+      return true;
+    } catch (e) {
+      print('[AUTH_PROVIDER] ❌ Delete account error: $e');
+      print('[AUTH_PROVIDER] ❌ Error type: ${e.runtimeType}');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 }

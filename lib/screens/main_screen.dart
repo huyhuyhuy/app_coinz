@@ -1032,6 +1032,92 @@ class _ProfileTabState extends State<ProfileTab> {
               }
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.delete_forever, color: Colors.red),
+            title: Text(
+              localizations.deleteAccount,
+              style: const TextStyle(color: Colors.red),
+            ),
+            onTap: () async {
+              // Hiển thị confirm dialog
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(localizations.deleteAccountConfirmTitle),
+                  content: Text(localizations.deleteAccountConfirmMessage),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(localizations.cancel),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                      child: Text(localizations.delete),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true && context.mounted) {
+                // Hiển thị loading
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final walletProvider = Provider.of<WalletProvider>(context, listen: false);
+                final miningProvider = Provider.of<MiningProvider>(context, listen: false);
+
+                // Stop mining nếu đang chạy
+                if (miningProvider.isMining && authProvider.userId != null) {
+                  await miningProvider.stopMining(authProvider.userId!);
+                }
+
+                // Reset providers
+                walletProvider.reset();
+                miningProvider.reset();
+
+                // Xóa tài khoản
+                final success = await authProvider.deleteAccount();
+
+                if (context.mounted) {
+                  // Đóng loading dialog
+                  Navigator.pop(context);
+
+                  if (success) {
+                    // Hiển thị thông báo thành công
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(localizations.deleteAccountSuccess),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Navigate về LoginScreen
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (Route<dynamic> route) => false,
+                    );
+                  } else {
+                    // Hiển thị thông báo lỗi
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(localizations.deleteAccountFailed),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+          ),
         ],
       ),
     );

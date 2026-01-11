@@ -238,6 +238,69 @@ class AppLocalizations {
     }
   }
 
+  String get deleteAccount {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Xóa tài khoản';
+      default:
+        return 'Delete Account';
+    }
+  }
+
+  String get deleteAccountConfirmTitle {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Xác nhận xóa tài khoản';
+      default:
+        return 'Confirm Account Deletion';
+    }
+  }
+
+  String get deleteAccountConfirmMessage {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Bạn có chắc chắn muốn xóa tài khoản?\n\nTất cả dữ liệu của bạn sẽ bị xóa vĩnh viễn và không thể khôi phục:\n• Điểm DFI\n• Lịch sử hoạt động\n• Thông tin cá nhân\n• Danh sách bạn bè';
+      default:
+        return 'Are you sure you want to delete your account?\n\nAll your data will be permanently deleted and cannot be recovered:\n• DFI Points\n• Activity history\n• Personal information\n• Friends list';
+    }
+  }
+
+  String get deleteAccountSuccess {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Tài khoản đã được xóa thành công';
+      default:
+        return 'Account deleted successfully';
+    }
+  }
+
+  String get deleteAccountFailed {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Không thể xóa tài khoản. Vui lòng thử lại.';
+      default:
+        return 'Failed to delete account. Please try again.';
+    }
+  }
+
+  String get cancel {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Hủy';
+      default:
+        return 'Cancel';
+    }
+  }
+
+  String get delete {
+    switch (locale.languageCode) {
+      case 'vi':
+        return 'Xóa';
+      default:
+        return 'Delete';
+    }
+  }
+
   // Messages
   String get welcomeMessage {
     switch (locale.languageCode) {
@@ -722,15 +785,6 @@ class AppLocalizations {
         return 'Xác nhận';
       default:
         return 'Confirm';
-    }
-  }
-
-  String get cancel {
-    switch (locale.languageCode) {
-      case 'vi':
-        return 'Hủy';
-      default:
-        return 'Cancel';
     }
   }
 
